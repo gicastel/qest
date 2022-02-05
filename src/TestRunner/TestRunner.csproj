@@ -15,10 +15,4 @@
 	  <ProjectReference Include="..\TestBase\TestBase.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Update="sample.yml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
-
 </Project>
