@@ -1,0 +1,60 @@
+- name: SampleSP - Ok
+  data:
+  - type: File
+    values: 
+      - testData/SampleData.sql
+  command:
+    commandText: dbo.SampleSp
+    parameters:
+    - name: name
+      type: NVarChar
+      value: SampleName
+    - name: newValue
+      type: Int
+      value: 1
+  results:
+    resultSets:
+    - name: sampleSpRS1
+      rowNumber: 1
+      resultsetDefinition:
+      - fieldName: Name
+        fieldType: NVarChar
+      - fieldName: Value
+        fieldType: Int
+    outputParameters:
+    - name: oldValue
+      type: Int
+      value: 0
+    returnCode:
+      name: rc
+      value: 0
+  deletes:
+  - type: File
+    values:
+    - testData/DeleteTestData.sql
+- name: SampleSP - KO
+  command:
+    commandText: dbo.SampleSp
+    parameters:
+    - name: name
+      type: NVarChar
+      value: NoMatchData
+    - name: newValue
+      type: Int
+      value: 1
+  results:
+    resultSets:
+    - name: sampleSpRS1
+      rowNumber: 0
+      resultsetDefinition:
+      - fieldName: Name
+        fieldType: NVarChar
+      - fieldName: Value
+        fieldType: Int
+    returnCode:
+      name: rc
+      value: 1
+  deletes:
+  - type: File
+    values:
+    - testData/DeleteTestData.sql

@@ -1,0 +1,9 @@
+<Project Sdk="MSBuild.Sdk.SqlProj/2.0.0">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>sampleDb</RootNamespace>
+    <SqlServerVersion>SqlAzure</SqlServerVersion>
+  </PropertyGroup>
+
+</Project>
