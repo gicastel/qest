@@ -18,7 +18,7 @@ Everything runs smoothly and we have now tested the DB.
 
 ## ...Wait a minute!
 Ok, let's assume you want to be sure that everything is actually being tested - let's go brake things.
-Go to sampleDb\dbo\Stored Procedures\SampleSP.sql and change a little bit of logic: let's say tha we want to know how many rows are updated.
+Go to [the stored procedure definition](sampleDb/dbo/Stored%20Procedures/SampleSP.sql) and change a little bit of logic: let's say that we want to know how many rows are updated during the operation.
 
 At line 9, start by declaring **@rc** as 0:
 ```
@@ -45,8 +45,8 @@ Deleted data
 ```
 As you see, the first test checked the resultset - good, the output parameter - good , but the return code expected was **0** and we got a **1**.
 
-Now: let's go to the test definition on tests/sampleSp.yml.
-We have to change row 30 from **0** to **1**.
+Now: let's go to the [test definition](tests/sampleSp.yml).
+As we expect to update one row when we execute the procedures with these parameters, we have to change row 30 from **0** to **1**.
 
 But wait! We have another test in the definition!
 We have to change row 56 too, from **1** to **0** (in the negative test, we don't load the row we are trying to update, so @@ROWCOUNT is expected to be 0).
