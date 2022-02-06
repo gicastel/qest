@@ -1,5 +1,5 @@
 - name: SampleSP - Ok
-  data:
+  before:
   - type: File
     values: 
       - testData/SampleData.sql
@@ -28,7 +28,7 @@
     returnCode:
       name: rc
       value: 0
-  deletes:
+  after:
   - type: File
     values:
     - testData/DeleteTestData.sql
@@ -54,7 +54,7 @@
     returnCode:
       name: rc
       value: 1
-  deletes:
+  after:
   - type: File
     values:
     - testData/DeleteTestData.sql

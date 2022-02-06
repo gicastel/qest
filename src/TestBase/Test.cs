@@ -6,12 +6,12 @@ namespace TestBase
     public class Test
     {
         public string Name { get; set; }
-        public List<Script>? Data { get; set; }
+        public List<Script>? Before { get; set; }
         public SqlConnection? Connection { get; set; }
         public TestCommand? Command { get; set; }
         public ResultGroup Results { get; set; }
         public List<TestAssert>? Asserts { get; set; }
-        public List<Script>? Deletes { get; set; }
+        public List<Script>? After { get; set; }
 
         private bool IsPass { get; set; }
         private List<(string Message, bool? IsError)> Report { get; set; }
@@ -46,16 +46,17 @@ namespace TestBase
                 return false;
             }
 
-            Connection.Open();
             try
             {
+                Connection.Open();
+
                 // data prep
-                if (Data != null)
+                if (Before != null)
                 {
                     SqlTransaction loadData = Connection.BeginTransaction();
                     try
                     {
-                        foreach (var item in Data)
+                        foreach (var item in Before)
                         {
                             string data = item.Compact();
                             if (data.Length > 0)
@@ -313,9 +314,9 @@ namespace TestBase
             }
             finally
             {
-                if (Deletes != null)
+                if (After != null)
                 {
-                    foreach (var del in Deletes)
+                    foreach (var del in After)
                     {
                         string cmd = del.Compact();
                         ReportAdd("Deleting data...");
@@ -327,23 +328,7 @@ namespace TestBase
                 Connection.Close();
             }
 
-            IsPass = Report.Where(m => m.IsError.HasValue && m.IsError.Value).Count() == 0;
-
-            foreach (var msg in Report)
-            {
-                if (!msg.IsError.HasValue)
-                    Console.ForegroundColor = ConsoleColor.White;
-                else
-                {
-                    if (msg.IsError.Value)
-                        Console.ForegroundColor = ConsoleColor.Red;
-                    else
-                        Console.ForegroundColor = ConsoleColor.Green;
-                }
-                Console.WriteLine(msg.Message);
-            }
-
-            Console.ForegroundColor = ConsoleColor.White;
+            IsPass = !Report.Where(m => m.IsError.HasValue && m.IsError.Value).Any();
 
             return IsPass;
         }
@@ -352,6 +337,12 @@ namespace TestBase
         {
             message = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") + " " + message;
             Report.Add((message, isError));
+
+            if (isError.HasValue)
+                Console.ForegroundColor = isError.Value? ConsoleColor.Red : ConsoleColor.Green;
+            
+            Console.WriteLine(message);
+            Console.ForegroundColor= ConsoleColor.White;
         }
     }
 }

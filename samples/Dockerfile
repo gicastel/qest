@@ -1,8 +1,11 @@
 FROM mcr.microsoft.com/mssql/server:2019-latest AS db
 USER root
 
+# env vars needed by the mssql image
 ENV ACCEPT_EULA=Y
 ENV SA_PASSWORD=sampleDbSecurePassword27!
+#
+
 ENV DB_NAME=sampleDb
 
 RUN apt-get update \
@@ -16,7 +19,6 @@ COPY ./testData ./testData
 COPY ./tests ./tests
 COPY ./TestRunner .
 RUN chmod a+x ./TestRunner
-
 
 # Launch SQL Server, confirm startup is complete, deploy the DACPAC, then terminate SQL Server.
 # See https://stackoverflow.com/a/51589787/488695
