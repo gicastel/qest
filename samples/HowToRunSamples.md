@@ -3,8 +3,8 @@
 First things first, you have to build the tool.
 From this directory:
 ```
-dotnet build ..\src\TestRunner\.
-dotnet publish ..\src\TestRunner\. -o .  --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
+dotnet build ..\src\qest\.
+dotnet publish ..\src\qest\. -o . --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
 ```
 
 Now you are ready to start the testing!

@@ -2,7 +2,7 @@
   before:
   - type: File
     values: 
-      - testData/SampleData.sql
+      - scripts/SampleData.sql
   command:
     commandText: dbo.SampleSp
     parameters:
@@ -31,7 +31,7 @@
   after:
   - type: File
     values:
-    - testData/DeleteTestData.sql
+    - scripts/DeleteTestData.sql
 - name: SampleSP - KO
   command:
     commandText: dbo.SampleSp
@@ -57,4 +57,4 @@
   after:
   - type: File
     values:
-    - testData/DeleteTestData.sql
+    - scripts/DeleteTestData.sql
