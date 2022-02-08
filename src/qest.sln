@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestBase", "TestBase\TestBase.csproj", "{B6FF040E-083C-472A-A76E-E4F439241D0A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestRunner", "TestRunner\TestRunner.csproj", "{64110F91-7843-4F56-9B16-6F79FEFD2B39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "qest", "qest\qest.csproj", "{64110F91-7843-4F56-9B16-6F79FEFD2B39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
