@@ -7,7 +7,7 @@ namespace TestBase
     {
         public List<ResultSet>? ResultSets { get; set; }
         public List<OutputParameter>? OutputParameters { get; set; }
-        public ReturnCode? ReturnCode { get; set; }
+        public int? ReturnCode { get; set; }
 
         public ResultGroup() { }
     }
@@ -15,7 +15,7 @@ namespace TestBase
     public class ResultSet
     {
         public string? Name { get; set; }
-        public List<ResultSetField>? ResultsetDefinition { get; set; }
+        public List<Column>? Columns { get; set; }
         public int? RowNumber { get; set; }
         public ResultSet() { }
     }
@@ -28,27 +28,18 @@ namespace TestBase
         public OutputParameter() { }
     }
 
-    public class ReturnCode
+    public class Column
     {
-        public string Name { get; set; }
-        public int Value { get; set; }
+        public string Name { get; set;}
+        public SqlDbType Type { get; set; }
 
-        public ReturnCode() { }
-    }
-
-
-    public class ResultSetField
-    {
-        public string FieldName { get; set;}
-        public SqlDbType FieldType { get; set; }
-
-        public ResultSetField(string fieldName, SqlDbType fieldType)
+        public Column(string colName, SqlDbType colType)
         {
-            FieldName = fieldName;
-            FieldType = fieldType;
+            Name = colName;
+            Type = colType;
         }
 
-        public ResultSetField() { }
+        public Column() { }
     }
 
 }

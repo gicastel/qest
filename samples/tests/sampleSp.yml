@@ -16,18 +16,16 @@
     resultSets:
     - name: sampleSpRS1
       rowNumber: 1
-      resultsetDefinition:
-      - fieldName: Name
-        fieldType: NVarChar
-      - fieldName: Value
-        fieldType: Int
+      columns:
+        - name: Name
+          type: NVarChar
+        - name: Value
+          type: Int
     outputParameters:
     - name: oldValue
       type: Int
       value: 0
-    returnCode:
-      name: rc
-      value: 0
+    returnCode: 0
   after:
   - type: File
     values:
@@ -46,14 +44,12 @@
     resultSets:
     - name: sampleSpRS1
       rowNumber: 0
-      resultsetDefinition:
-      - fieldName: Name
-        fieldType: NVarChar
-      - fieldName: Value
-        fieldType: Int
-    returnCode:
-      name: rc
-      value: 1
+      columns:
+        - name: Name
+          type: NVarChar
+        - name: Value
+          type: Int
+    returnCode: 1
   after:
   - type: File
     values:

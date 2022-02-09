@@ -17,16 +17,14 @@
     resultSets:
     - name: 
       rowNumber: 
-      resultsetDefinition:
-      - fieldName: 
-        fieldType: 
+      columns:
+      - name: 
+        type: 
     outputParameters:
     - name: 
       type: 
       value: 
     returnCode:
-      name: 
-      value: 
   asserts:
     - sqlQuery:
       scalarType:
@@ -61,7 +59,7 @@ The definition of the results to verify.
 |---|---|:---:|---|
 |resultSets|A list of [ResultSets](#resultset)|_O_||
 |outputParameters|A list of [Parameters](#parameter)|_O_||
-|returnCode|A single [ReturnCode](#returnCode)|_O_||
+|returnCode| The return code value |_O_||
 
 ### asserts
 _Optional_<br>
@@ -106,32 +104,21 @@ Definition of a result set.
 ```
 - name: 
   rowNumber: 
-  resultsetDefinition:
-  - fieldName: 
-    fieldType: 
+  columns:
+  - name: 
+    type: 
 ```
 |Attribute|Description|M/O|Notes|
 |---|---|:---:|---|
 |__name__|Name of the result set|__M__||
 |__rowNumber__|Expected number of rows|_O_||
-|__resultsetDefinition__|Definition of the fields of the result set|_O_||
+|__columns__|Definition of the columns of the result set|_O_||
 
 Each column is defined as:
 |Attribute|Description|M/O|Notes|
 |---|---|:---:|---|
 |__name__|Name of the column of the result set|__M__||
 |__type__|Type of the column|See [Types](#type)|__M__||
-
-### ReturnCode
-Definition of the return code.
-```
-name:
-value:
-```
-|Attribute|Description|M/O|Notes|
-|---|---|:---:|---|
-|__name__|Name of the return code parameter|__M__|Without __@__|
-|__value__|Expected value of the returncode|__M__||
 
 ### Script
 Definition of a script to run.

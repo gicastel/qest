@@ -98,10 +98,10 @@ namespace TestBase
                         }
 
                     // add rc if exists
-                    if (Results.ReturnCode != null)
+                    if (Results.ReturnCode.HasValue)
                     {
                         var rc = Results.ReturnCode;
-                        var outPar = testCmd.Parameters.Add($"@{rc.Name}", SqlDbType.Int);
+                        var outPar = testCmd.Parameters.Add($"@rc", SqlDbType.Int);
                         outPar.Direction = ParameterDirection.ReturnValue;
                         outPars.Add(outPar);
                     }
@@ -120,37 +120,37 @@ namespace TestBase
                         for (int i = 0; i < resultSets.Count; i++)
                         {
                             DataTable dataTable = new(resultSets[i].Name);
-                            for (int f = 0; f < resultSets[i].ResultsetDefinition.Count; f++)
+                            for (int f = 0; f < resultSets[i].Columns.Count; f++)
                             {
-                                var field = resultSets[i].ResultsetDefinition[f];
-                                switch (field.FieldType)
+                                var column = resultSets[i].Columns[f];
+                                switch (column.Type)
                                 {
                                     case SqlDbType.Int:
-                                        dataTable.Columns.Add(field.FieldName, typeof(Int32));
+                                        dataTable.Columns.Add(column.Name, typeof(Int32));
                                         break;
                                     case SqlDbType.NVarChar:
-                                        dataTable.Columns.Add(field.FieldName, typeof(String));
+                                        dataTable.Columns.Add(column.Name, typeof(String));
                                         break;
                                     case SqlDbType.DateTime:
-                                        dataTable.Columns.Add(field.FieldName, typeof(DateTime));
+                                        dataTable.Columns.Add(column.Name, typeof(DateTime));
                                         break;
                                     case SqlDbType.Bit:
-                                        dataTable.Columns.Add(field.FieldName, typeof(bool));
+                                        dataTable.Columns.Add(column.Name, typeof(bool));
                                         break;
                                     case SqlDbType.DateTimeOffset:
-                                        dataTable.Columns.Add(field.FieldName, typeof(DateTimeOffset));
+                                        dataTable.Columns.Add(column.Name, typeof(DateTimeOffset));
                                         break;
                                     case SqlDbType.TinyInt:
-                                        dataTable.Columns.Add(field.FieldName, typeof(Byte));
+                                        dataTable.Columns.Add(column.Name, typeof(Byte));
                                         break;
                                     case SqlDbType.Date:
-                                        dataTable.Columns.Add(field.FieldName, typeof(DateTime));
+                                        dataTable.Columns.Add(column.Name, typeof(DateTime));
                                         break;
                                     case SqlDbType.Float:
-                                        dataTable.Columns.Add(field.FieldName, typeof(Double));
+                                        dataTable.Columns.Add(column.Name, typeof(Double));
                                         break;
                                     case SqlDbType.Time:
-                                        dataTable.Columns.Add(field.FieldName, typeof(TimeSpan));
+                                        dataTable.Columns.Add(column.Name, typeof(TimeSpan));
                                         break;
                                 }
                             }
@@ -158,41 +158,41 @@ namespace TestBase
                             while (reader.Read())
                             {
                                 DataRow row = dataTable.NewRow();
-                                for (int f = 0; f < resultSets[i].ResultsetDefinition.Count; f++)
+                                for (int f = 0; f < resultSets[i].Columns.Count; f++)
                                 {
-                                    var field = resultSets[i].ResultsetDefinition[f];
+                                    var column = resultSets[i].Columns[f];
                                     if (reader.IsDBNull(f))
-                                        row[field.FieldName] = DBNull.Value;
+                                        row[column.Name] = DBNull.Value;
                                     else
                                     {
-                                        switch (field.FieldType)
+                                        switch (column.Type)
                                         {
                                             case SqlDbType.Int:
-                                                row[field.FieldName] = reader.GetInt32(f);
+                                                row[column.Name] = reader.GetInt32(f);
                                                 break;
                                             case SqlDbType.NVarChar:
-                                                row[field.FieldName] = reader.GetString(f);
+                                                row[column.Name] = reader.GetString(f);
                                                 break;
                                             case SqlDbType.DateTime:
-                                                row[field.FieldName] = reader.GetDateTime(f);
+                                                row[column.Name] = reader.GetDateTime(f);
                                                 break;
                                             case SqlDbType.Bit:
-                                                row[field.FieldName] = reader.GetSqlBoolean(f);
+                                                row[column.Name] = reader.GetSqlBoolean(f);
                                                 break;
                                             case SqlDbType.DateTimeOffset:
-                                                row[field.FieldName] = reader.GetDateTimeOffset(f);
+                                                row[column.Name] = reader.GetDateTimeOffset(f);
                                                 break;
                                             case SqlDbType.TinyInt:
-                                                row[field.FieldName] = reader.GetByte(f);
+                                                row[column.Name] = reader.GetByte(f);
                                                 break;
                                             case SqlDbType.Date:
-                                                row[field.FieldName] = reader.GetDateTime(f);
+                                                row[column.Name] = reader.GetDateTime(f);
                                                 break;
                                             case SqlDbType.Float:
-                                                row[field.FieldName] = reader.GetDouble(f);
+                                                row[column.Name] = reader.GetDouble(f);
                                                 break;
                                             case SqlDbType.Time:
-                                                row[field.FieldName] = reader.GetTimeSpan(f);
+                                                row[column.Name] = reader.GetTimeSpan(f);
                                                 break;
                                         }
                                     }
@@ -255,23 +255,23 @@ namespace TestBase
                         }
                     }
 
-                    if (Results.ReturnCode != null)
+                    if (Results.ReturnCode.HasValue)
                     {
-                        var expected = Results.ReturnCode;
-                        ReportAdd($"Checking Return Value: {expected.Name}");
-                        var currRes = outPars.Where(p => p.ParameterName == $"@{expected.Name}").FirstOrDefault();
-                        if (currRes == null)
+                        var expected = Results.ReturnCode.Value;
+                        ReportAdd($"Checking Return Value");
+                        var rcPar = outPars.Where(p => p.ParameterName == $"@rc").FirstOrDefault();
+                        if (rcPar == null)
                         {
-                            ReportAdd($"Return Code {expected.Name} not found", true);
+                            ReportAdd($"Return Code not found", true);
                         }
                         else
                         {
-                            if (expected.Value != Convert.ToInt32(currRes.Value))
+                            if (expected != Convert.ToInt32(rcPar.Value))
                             {
-                                ReportAdd($"Return Code {expected.Name}: {currRes.Value} != {expected.Value}", true);
+                                ReportAdd($"Return Code: {rcPar.Value} != {expected}", true);
                             }
                             else
-                                ReportAdd($"Return Code {expected.Name}: {expected.Value}", false);
+                                ReportAdd($"Return Code: {expected}", false);
                         }
                     }
                 }

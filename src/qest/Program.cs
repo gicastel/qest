@@ -17,6 +17,7 @@ if (args.Length == 0)
     Console.WriteLine("--tcs        MSSQL Server target connectionstring            Required");
     Console.WriteLine();
     Console.WriteLine("*One of --file or --folder is Required.");
+    Environment.Exit(1);
 }
 
 List<Test> TestCollection = new List<Test>();
