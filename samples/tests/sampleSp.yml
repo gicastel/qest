@@ -26,6 +26,10 @@
       type: Int
       value: 0
     returnCode: 0
+  asserts:
+    - sqlQuery: SELECT COUNT(*) FROM dbo.SampleTable WHERE [Value] = 1
+      scalarType: Int
+      scalarValue: 1
   after:
   - type: File
     values:
