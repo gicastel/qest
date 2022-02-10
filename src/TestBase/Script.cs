@@ -3,22 +3,18 @@
     public class Script
     {
         public ScriptType Type { get; set; }
-        public List<string>? Values { get; set; }
-
-        public Script() { }
+        public List<string> Values { get; set; }
 
         public string Compact()
         {
             if (Values == null)
-                return "";
+                throw new ArgumentNullException(nameof(Values));
 
             switch (this.Type)
             {
                 case ScriptType.Inline:
-                    if (Values is not null)
-                        return string.Join(";", Values);
-                    else
-                        throw new InvalidOperationException();
+                    return string.Join(";", Values);
+
                 case ScriptType.File:
                     List<string> list = new List<string>();
                     foreach (var item in Values)
@@ -30,11 +26,11 @@
                             list.Add(data);
                         }
                         else
-                            throw new InvalidOperationException();
+                            throw new FileNotFoundException(null, item);
                     }
                     return string.Join(";", list);
                 default:
-                    throw new InvalidOperationException();
+                    throw new ArgumentException(nameof(Type));
             }
         }
     }

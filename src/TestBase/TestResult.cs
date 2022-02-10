@@ -8,16 +8,21 @@ namespace TestBase
         public List<ResultSet>? ResultSets { get; set; }
         public List<OutputParameter>? OutputParameters { get; set; }
         public int? ReturnCode { get; set; }
-
-        public ResultGroup() { }
     }
 
     public class ResultSet
     {
-        public string? Name { get; set; }
-        public List<Column>? Columns { get; set; }
+        public string Name { get; set; }
+        public List<Column> Columns { get; set; }
         public int? RowNumber { get; set; }
-        public ResultSet() { }
+
+        public DataTable GetDataTable()
+        {
+            DataTable dt = new(Name);
+            foreach (var col in Columns)
+                dt.Columns.Add(new DataColumn(col.Name, Utils.MapType(col.Type)));
+            return dt;
+        }
     }
 
     public class OutputParameter
@@ -25,21 +30,12 @@ namespace TestBase
         public string Name { get; set; }
         public SqlDbType Type { get; set; }
         public object Value { get; set; }
-        public OutputParameter() { }
     }
 
     public class Column
     {
         public string Name { get; set;}
         public SqlDbType Type { get; set; }
-
-        public Column(string colName, SqlDbType colType)
-        {
-            Name = colName;
-            Type = colType;
-        }
-
-        public Column() { }
     }
 
 }

@@ -8,23 +8,13 @@ namespace TestBase
         public string Name { get; set; }
         public List<Script>? Before { get; set; }
         public SqlConnection? Connection { get; set; }
-        public TestCommand? Command { get; set; }
+        public TestCommand Command { get; set; }
         public ResultGroup Results { get; set; }
-        public List<TestAssert>? Asserts { get; set; }
+        public List<Assert>? Asserts { get; set; }
         public List<Script>? After { get; set; }
 
         private bool IsPass { get; set; }
-        private List<(string Message, bool? IsError)> Report { get; set; }
-
-        public Test(string name)
-        {
-            Name = name;
-        }
-
-        public Test()
-        {
-
-        }
+        private List<(string Message, bool? IsError)>? Report { get; set; }
 
         public bool Run()
         {
@@ -58,18 +48,18 @@ namespace TestBase
                     {
                         foreach (var item in Before)
                         {
-                            string data = item.Compact();
-                            if (data.Length > 0)
+                            string script = item.Compact();
+                            if (script.Length > 0)
                             {
-                                ReportAdd("Loading data...");
-                                var dataprep = new SqlCommand(data, Connection, loadData);
-                                dataprep.ExecuteNonQuery();
-                                ReportAdd("Loaded data", false);
+                                ReportAdd("Running Before scripts...");
+                                var cmd = new SqlCommand(script, Connection, loadData);
+                                cmd.ExecuteNonQuery();
+                                ReportAdd("Completed.", false);
                             }
                         }
                         loadData.Commit();
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         loadData.Rollback();
                         throw;
@@ -80,10 +70,11 @@ namespace TestBase
                 testCmd.CommandType = CommandType.StoredProcedure;
 
                 // add input pars
-                foreach (var input in Command.Parameters)
-                {
-                    testCmd.Parameters.AddWithValue($"@{input.Name}", input.Value);
-                }
+                if (Command.Parameters != null)
+                    foreach (var input in Command.Parameters)
+                    {
+                        testCmd.Parameters.AddWithValue($"@{input.Name}", input.Value);
+                    }
 
                 // add output pars
                 List<SqlParameter> outPars = new();
@@ -92,7 +83,7 @@ namespace TestBase
                     if (Results.OutputParameters != null)
                         foreach (var output in Results.OutputParameters)
                         {
-                            var outPar = testCmd.Parameters.Add($"@{output.Name}", SqlDbType.Int);
+                            var outPar = testCmd.Parameters.Add($"@{output.Name}", output.Type);
                             outPar.Direction = ParameterDirection.Output;
                             outPars.Add(outPar);
                         }
@@ -117,96 +108,32 @@ namespace TestBase
 
                         List<DataTable> dataTables = new();
 
-                        for (int i = 0; i < resultSets.Count; i++)
+                        foreach (var resultSet in resultSets)
                         {
-                            DataTable dataTable = new(resultSets[i].Name);
-                            for (int f = 0; f < resultSets[i].Columns.Count; f++)
-                            {
-                                var column = resultSets[i].Columns[f];
-                                switch (column.Type)
-                                {
-                                    case SqlDbType.Int:
-                                        dataTable.Columns.Add(column.Name, typeof(Int32));
-                                        break;
-                                    case SqlDbType.NVarChar:
-                                        dataTable.Columns.Add(column.Name, typeof(String));
-                                        break;
-                                    case SqlDbType.DateTime:
-                                        dataTable.Columns.Add(column.Name, typeof(DateTime));
-                                        break;
-                                    case SqlDbType.Bit:
-                                        dataTable.Columns.Add(column.Name, typeof(bool));
-                                        break;
-                                    case SqlDbType.DateTimeOffset:
-                                        dataTable.Columns.Add(column.Name, typeof(DateTimeOffset));
-                                        break;
-                                    case SqlDbType.TinyInt:
-                                        dataTable.Columns.Add(column.Name, typeof(Byte));
-                                        break;
-                                    case SqlDbType.Date:
-                                        dataTable.Columns.Add(column.Name, typeof(DateTime));
-                                        break;
-                                    case SqlDbType.Float:
-                                        dataTable.Columns.Add(column.Name, typeof(Double));
-                                        break;
-                                    case SqlDbType.Time:
-                                        dataTable.Columns.Add(column.Name, typeof(TimeSpan));
-                                        break;
-                                }
-                            }
+                            DataTable dataTable = resultSet.GetDataTable();
 
                             while (reader.Read())
                             {
                                 DataRow row = dataTable.NewRow();
-                                for (int f = 0; f < resultSets[i].Columns.Count; f++)
+
+                                for (int f = 0; f < resultSet.Columns.Count; f++)
                                 {
-                                    var column = resultSets[i].Columns[f];
+                                    var column = resultSet.Columns[f];
+
                                     if (reader.IsDBNull(f))
                                         row[column.Name] = DBNull.Value;
                                     else
-                                    {
-                                        switch (column.Type)
-                                        {
-                                            case SqlDbType.Int:
-                                                row[column.Name] = reader.GetInt32(f);
-                                                break;
-                                            case SqlDbType.NVarChar:
-                                                row[column.Name] = reader.GetString(f);
-                                                break;
-                                            case SqlDbType.DateTime:
-                                                row[column.Name] = reader.GetDateTime(f);
-                                                break;
-                                            case SqlDbType.Bit:
-                                                row[column.Name] = reader.GetSqlBoolean(f);
-                                                break;
-                                            case SqlDbType.DateTimeOffset:
-                                                row[column.Name] = reader.GetDateTimeOffset(f);
-                                                break;
-                                            case SqlDbType.TinyInt:
-                                                row[column.Name] = reader.GetByte(f);
-                                                break;
-                                            case SqlDbType.Date:
-                                                row[column.Name] = reader.GetDateTime(f);
-                                                break;
-                                            case SqlDbType.Float:
-                                                row[column.Name] = reader.GetDouble(f);
-                                                break;
-                                            case SqlDbType.Time:
-                                                row[column.Name] = reader.GetTimeSpan(f);
-                                                break;
-                                        }
-                                    }
+                                        row[column.Name] = Convert.ChangeType(reader.GetValue(f), Utils.MapType(column.Type));
                                 }
                                 dataTable.Rows.Add(row);
                             }
+
                             dataTables.Add(dataTable);
                             reader.NextResult();
                         }
 
                         foreach (var expected in Results.ResultSets)
                         {
-                            bool error = false;
-
                             ReportAdd($"Checking ResultSet: {expected.Name}");
                             var currRes = dataTables.Where(d => d.TableName == expected.Name).FirstOrDefault();
                             if (currRes == null)
@@ -251,14 +178,14 @@ namespace TestBase
                                 }
                             }
 
-                            ReportAdd($"Result {expected.Name}: {expected.Value}", false);
+                            ReportAdd($"Result {expected.Name}: {expected.Value} == {currRes.Value}", false);
                         }
                     }
 
                     if (Results.ReturnCode.HasValue)
                     {
                         var expected = Results.ReturnCode.Value;
-                        ReportAdd($"Checking Return Value");
+                        ReportAdd($"Checking Return Code");
                         var rcPar = outPars.Where(p => p.ParameterName == $"@rc").FirstOrDefault();
                         if (rcPar == null)
                         {
@@ -267,11 +194,9 @@ namespace TestBase
                         else
                         {
                             if (expected != Convert.ToInt32(rcPar.Value))
-                            {
                                 ReportAdd($"Return Code: {rcPar.Value} != {expected}", true);
-                            }
                             else
-                                ReportAdd($"Return Code: {expected}", false);
+                                ReportAdd($"Return Code: {expected} == {expected}", false);
                         }
                     }
                 }
@@ -281,27 +206,18 @@ namespace TestBase
                 {
                     foreach (var assert in Asserts)
                     {
-                        SqlCommand cmd = new SqlCommand(assert.SqlQuery, Connection);
+                        SqlCommand cmd = new(assert.SqlQuery, Connection);
                         var result = cmd.ExecuteScalar();
                         if (result != null)
                         {
                             bool pass = false;
-                            switch (assert.ScalarType)
-                            {
-                                case SqlDbType.Int:
-                                    pass = Convert.ToInt32(assert.ScalarValue) == Convert.ToInt32(result);
-                                    break;
-                                case SqlDbType.NVarChar:
-                                    pass = Convert.ToString(assert.ScalarValue) == Convert.ToString(result);
-                                    break;
-                                case SqlDbType.SmallInt:
-                                    pass = Convert.ToByte(assert.ScalarValue) == Convert.ToByte(result);
-                                    break;
-                                case SqlDbType.Bit:
-                                    pass = Convert.ToBoolean(assert.ScalarValue) == Convert.ToBoolean(result);
-                                    break;
-                            }
-                            ReportAdd($"Assert {assert.SqlQuery}: {result} == {assert.ScalarValue}", !pass);
+                            var scalarType = Utils.MapType(assert.ScalarType);
+                            pass = Convert.ChangeType(assert.ScalarValue, scalarType).Equals(Convert.ChangeType(result, scalarType));
+
+                            if (pass)
+                                ReportAdd($"Assert {assert.SqlQuery}: {result} == {assert.ScalarValue}", false);
+                            else
+                                ReportAdd($"Assert {assert.SqlQuery}: {result} != {assert.ScalarValue}", true);
                         }
                         else
                             ReportAdd($"Assert {assert.SqlQuery}: Result NULL", true);
@@ -316,19 +232,21 @@ namespace TestBase
             {
                 if (After != null)
                 {
-                    foreach (var del in After)
+                    foreach (var script in After)
                     {
-                        string cmd = del.Compact();
-                        ReportAdd("Deleting data...");
+                        string cmd = script.Compact();
+                        ReportAdd("Running After scripts...");
                         var delete = new SqlCommand(cmd, Connection);
                         delete.ExecuteNonQuery();
-                        ReportAdd("Deleted data", false);
+                        ReportAdd("Completed.", false);
                     }
                 }
                 Connection.Close();
             }
 
             IsPass = !Report.Where(m => m.IsError.HasValue && m.IsError.Value).Any();
+
+            ReportAdd($"Test {Name}: {(IsPass ? "OK":"KO")}", !IsPass);
 
             return IsPass;
         }
@@ -342,7 +260,7 @@ namespace TestBase
                 Console.ForegroundColor = isError.Value? ConsoleColor.Red : ConsoleColor.Green;
             
             Console.WriteLine(message);
-            Console.ForegroundColor= ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }

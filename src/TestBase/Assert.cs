@@ -2,7 +2,7 @@
 
 namespace TestBase
 {
-    public class TestAssert
+    public class Assert
     {
         public string SqlQuery { get; set; }
         public SqlDbType ScalarType { get; set; }
