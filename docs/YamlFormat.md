@@ -45,12 +45,12 @@ Array of [Scripts](#script) object that runs before the command is executed.<br>
 Before scripts run in a single transaction.
 
 ### command
-_Optional_<br>
+__Mandatory__<br>
 A single element representing the command (Stored Procedure) to run.
 |Attribute|Description|M/O|Notes|
 |---|---|:---:|---|
-|__commandText__|The Stored Procedure to run|__M__|
-|__parameters__|A list of (Parameters)[#parameter]|_O_|
+|__commandText__|The Stored Procedure to run|__M__||
+|__parameters__|A list of [Parameters](#parameter)|_O_||
 
 ### results
 _Optional_<br>
@@ -111,8 +111,8 @@ Definition of a result set.
 |Attribute|Description|M/O|Notes|
 |---|---|:---:|---|
 |__name__|Name of the result set|__M__||
+|__columns__|Definition of the columns of the result set|__M__||
 |__rowNumber__|Expected number of rows|_O_||
-|__columns__|Definition of the columns of the result set|_O_||
 
 Each column is defined as:
 |Attribute|Description|M/O|Notes|
@@ -132,7 +132,7 @@ values:
 |__type__|Type of the script|_Inline_ or _File_|__M__|
 |__value__|If __type__ is _Inline_: a list of SQL commands<br>If __type__ is _File_: a list of path to text files |__M__|Files path shoud be relative to the __qest__ excutable|
 
-Each __Script__ entity is ran atomically: the strings / files are concatenated in a single SQL instruction joined by ";".
+Each __Script__ entity is ran atomically: the strings / files are concatenated in a single SQL batch joined by ";".
 
 ### Type
 The types used are the text representation of the _SqlDBType_ C# enum.
