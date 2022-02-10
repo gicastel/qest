@@ -4,3 +4,5 @@ DockerFile
 Readme.md
 docs
 samples
+./src/bin
+./src/obj

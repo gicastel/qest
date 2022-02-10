@@ -7,10 +7,11 @@ FROM mcr.microsoft.com/mssql/server:2019-latest AS mssql
 USER root
 
 # env vars needed by the mssql image
-ENV ACCEPT_EULA=Y
-ENV SA_PASSWORD=qestDbSecurePassword27!
+ENV ACCEPT_EULA Y
+ENV SA_PASSWORD qestDbSecurePassword27!
 #
-ENV DACPAC=
+#ENV DACPAC
+
 
 WORKDIR /qest
 COPY --from=build /qest/qest .
