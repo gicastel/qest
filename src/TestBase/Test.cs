@@ -136,6 +136,7 @@ namespace TestBase
                         {
                             ReportAdd($"Checking ResultSet: {expected.Name}");
                             var currRes = dataTables.Where(d => d.TableName == expected.Name).FirstOrDefault();
+
                             if (currRes == null)
                             {
                                 ReportAdd($"Resultset {expected.Name} not found", true);
