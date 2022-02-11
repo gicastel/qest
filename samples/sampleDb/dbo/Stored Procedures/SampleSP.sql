@@ -18,17 +18,32 @@ BEGIN
     END
 
 
-    SELECT @oldValue = [Value]
+    SELECT @oldValue = [IntValue]
     FROM dbo.SampleTable
     WHERE [Name] = @name
 
     UPDATE dbo.SampleTable
-    SET [Value] = @newValue
+    SET [IntValue] = @newValue
     WHERE [Name] = @name
     
     SET @rc = 0
 
-    SELECT [Name], [Value]
+    SELECT    
+        [Name],
+        [BitValue],
+        [TinyIntValue],
+        [SmallintValue],
+        [IntValue],
+        [BigIntValue],
+        [FloatValue],
+        [RealValue],
+        [DecimalValue],
+        [MoneyValue],
+        [DateTimeValue],
+        [DateTime2Value],
+        [DateTimeOffsetValue],
+        [DateValue],
+        [Time]
     FROM dbo.SampleTable
     WHERE [Name] = @name
 
