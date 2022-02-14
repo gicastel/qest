@@ -10,14 +10,19 @@ docker build . -t qestsamples
 docker run -t qestsamples
 ```
 ### ...or run directly from the registry
-Run the command:
+Build the sample database:
+```
+dotnet build ./sampleDb/ -c Release -o ./dacpac
+```
+
+Then run the command:
 ```
 docker run --rm -t \
-    -v {full/local/path/to/test/folder}:/qest/tests \
-    -v {full/local/path/to/scripts/folder}:/qest/scripts \
-    -v {full/local/path/to/dacpac/folder}:/qest/db \
+    -v {full/local/path}/tests:/qest/tests \
+    -v {full/local/path}/scripts:/qest/scripts \
+    -v {full/local/path}/dacpac:/qest/db \
     --env DACPAC={filename} \
-    qest
+    ghcr.io/geims83/qest:latest
 ``` 
 
 ### And you're done!

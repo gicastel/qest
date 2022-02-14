@@ -1,6 +1,6 @@
 # qest
 
-## What is this?
+## What is qest?
 A simple, cross platform, command line tool to test MSSQL procedures without the needs of a SSDT project or custom procedures / assemblies.
 
 Define your own YAML file with before / after scripts (inline or external text files), input parameters and you can verify:
