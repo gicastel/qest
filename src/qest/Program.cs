@@ -26,35 +26,36 @@ List<string> pars = args.ToList();
 if (pars.Contains("--file"))
 {
     int idx = pars.IndexOf("--file") + 1;
-    if (idx < pars.Count)
+    if (idx > pars.Count || !File.Exists(pars[idx]))
     {
-        string fname = pars[idx];
-        if (File.Exists(fname))
-            TestCollection.AddRange(SafeReadYaml(fname));
-        else
-            ExitParNotValid("--file");
+        // if par index out of range or file not exists
+        ExitParNotValid("--file");
     }
     else
-        ExitParNotValid("--file");
+        TestCollection.AddRange(SafeReadYaml(pars[idx]));
+
 }
 else if (pars.Contains("--folder"))
 {
     int idx = pars.IndexOf("--folder") + 1;
-    if (idx < pars.Count)
+    if (idx > pars.Count || !Directory.Exists(pars[idx]))
     {
-        string fname = pars[idx];
-        if (Directory.Exists(fname))
-            foreach (var item in Directory.GetFiles(fname))
-                TestCollection.AddRange(SafeReadYaml(item));
-        else
-            ExitParNotValid("--folder");
+        // if par index out of range or file not exists
+        ExitParNotValid("--folder");
     }
     else
-        ExitParNotValid("--folder");
+        foreach (var item in Directory.GetFiles(pars[idx]))
+            TestCollection.AddRange(SafeReadYaml(item));
 }
 else
 {
     Console.WriteLine("One parameter between --file or --folder is mandatory.");
+    Environment.Exit(1);
+}
+
+if (TestCollection.Count == 0)
+{
+    Console.WriteLine("No test loaded");
     Environment.Exit(1);
 }
 
@@ -72,11 +73,6 @@ if (ConnectionString.Length == 0)
 
 var sqlConnection = new SqlConnection(ConnectionString);
 
-if (TestCollection.Count == 0)
-{
-    Console.WriteLine("No test loaded");
-    Environment.Exit(1);
-}
 foreach (var test in TestCollection)
 {
     test.Connection = sqlConnection;
