@@ -102,6 +102,7 @@ namespace TestBase
 
                 if (Results != null)
                 {
+                    // resultsets
                     if (Results.ResultSets != null)
                     {
                         var resultSets = Results.ResultSets;
@@ -158,6 +159,7 @@ namespace TestBase
 
                     reader.Close();
 
+                    //output parameters
                     if (Results.OutputParameters != null)
                     {
                         foreach (var expected in Results.OutputParameters)
@@ -183,6 +185,7 @@ namespace TestBase
                         }
                     }
 
+                    //returncode
                     if (Results.ReturnCode.HasValue)
                     {
                         var expected = Results.ReturnCode.Value;

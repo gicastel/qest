@@ -1,6 +1,7 @@
 # How to run the provided samples
 
-## Download this folder
+### Download this folder
+Clone or download this repo.
 
 ### Build your local image...
 Open a terminal in the folder where you have downloaded the data. Then run:
@@ -19,7 +20,7 @@ docker run --rm -t \
     qest
 ``` 
 
-## And you're done!
+### And you're done!
 The output should look like this:
 ``` 
 Running Test: SampleSP - Ok
