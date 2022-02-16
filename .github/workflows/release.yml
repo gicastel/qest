@@ -35,8 +35,8 @@ jobs:
           
       - name: Create Packages
         run: |
-          gzip ./pub/qest
-          gzip ./pub/qest.exe
+          gzip -c ./pub/qest > ./qest-linux-x64.gz
+          gzip -c ./pub/qest.exe > ./qest-win-x64.gz
           
       - name: Release
         uses: ncipollo/release-action@v1
