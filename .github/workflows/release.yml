@@ -42,4 +42,4 @@ jobs:
           artifacts: "*.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
-          tag: ${{ tag }}
+          tag: ${{ github.event.inputs.tag }}
