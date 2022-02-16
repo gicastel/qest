@@ -5,8 +5,19 @@ on:
   push:
     tags: 
     - '*'
+    branches:
+      - "workflows"
 
   workflow_dispatch:
+   inputs:
+      release_type:
+        description: 'Release Options'
+        required: true
+        default: 'Initial Release'
+        type: choice
+        options:
+          - Initial Release
+          - Redeploy
 
 jobs:  
   build:
