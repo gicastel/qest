@@ -1,0 +1,39 @@
+
+name: release
+
+on:
+  push:
+    tags: 
+    - '*'
+
+  workflow_dispatch:
+
+jobs:  
+  build:
+    runs-on: ubuntu-latest    
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1.9.0
+        with:
+          # SDK version(s) to use. If not provided, will install global.json version when available. Examples: 2.2.104, 3.1, 3.1.x
+          dotnet-version: 6.x.x
+        
+      - name: Build
+        run: |
+          dotnet publish ./src/qest/ -o ./pub --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
+          dotnet publish ./src/qest/ -o ./pub --runtime win-x64 -c Release --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
+          
+      - name: Create Packages
+        run: |
+          tar -czvf qest-linux-x64.tar.gz ./pub/qest
+          tar -czvf qest-win-x64.tar.gz ./pub/qest.exe
+          
+      - name: Release
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "*.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
