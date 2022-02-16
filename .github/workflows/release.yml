@@ -35,13 +35,13 @@ jobs:
           
       - name: Create Packages
         run: |
-          tar -czvf qest-linux-x64.tar.gz ./pub/qest
-          tar -czvf qest-win-x64.tar.gz ./pub/qest.exe
+          gzip ./pub/qest
+          gzip ./pub/qest.exe
           
       - name: Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "*.tar.gz"
+          artifacts: "*.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           tag: '0.0.1'
