@@ -5,22 +5,11 @@ on:
   push:
     tags: 
       - '*'
-    branches:
-      - workflows
-  
-  workflow_dispatch:
-   inputs:
-      tag:
-        description: 'Tag'
-        required: true
-        default: '0.0.1'
-        type: string
 
 jobs:  
   build:
     runs-on: ubuntu-latest    
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
       - name: Setup .NET Core SDK
@@ -44,4 +33,3 @@ jobs:
           artifacts: "*.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
-          tag: '0.0.1'
