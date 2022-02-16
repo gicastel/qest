@@ -31,17 +31,17 @@ You need to provide:
 
 Please note: for this default image to work, YAML files have to reference the _File_ scripts in the `scripts/{filename}` form. See [docs](docs/YamlFormat.md#script).
 
-Run the image binding the `tests`, `scripts` and `db` directories and providing the correct enviroment variables:
+Run the image binding the `tests`, `scripts` and `db` directories and providing the correct environment variables:
 ```
 docker run --rm \
     -v {full/local/path/to/test/folder}:/qest/tests \
     -v {full/local/path/to/scripts/folder}:/qest/scripts \
     -v {full/local/path/to/dacpac/folder}:/qest/db \
     --env DACPAC={filenameWithoutExtension} \
-    qest
+    ghcr.io/geims83/qest:latest
 ``` 
 ## Samples
-See [samples folder](samples/HowToRunSamples.md).
+See [samples folder](samples/README.md).
 
 ## YAML test definition
 See [docs](docs/YamlFormat.md).

@@ -1,8 +1,9 @@
 # How to run the provided samples
 
-### Download this folder
+## Step 1 - Download this folder
 Clone or download this repo.
 
+## Step 2
 ### Build your local image...
 Open a terminal in the folder where you have downloaded the data. Then run:
 ```
@@ -25,7 +26,7 @@ docker run --rm -t \
     ghcr.io/geims83/qest:latest
 ``` 
 
-### And you're done!
+## Step 3: you're done!
 The output should look like this:
 ``` 
 Running Test: SampleSP - Ok
@@ -58,6 +59,7 @@ And at line 29:
 ```
 SET @rc = @@ROWCOUNT
 ```
+
 Now build the image again: you should get an error, and a log like:
 ```
 Running Test: SampleSP - Ok
@@ -69,7 +71,7 @@ Checking Output Parameter: oldValue
 Result oldValue: 0 == 0
 Checking Return Code
 Return Code: 1 != 0
-Assert SELECT COUNT(*) FROM dbo.SampleTable WHERE [Value] = 1: 1 == 1
+Assert SELECT COUNT(*) FROM dbo.SampleTable WHERE [IntValue] = 1: 1 == 1
 Running After scripts...
 Completed.
 Test SampleSP - Ok: KO
