@@ -4,20 +4,15 @@ name: release
 on:
   push:
     tags: 
-    - '*'
-    branches:
-      - "workflows"
+      - '*'
 
   workflow_dispatch:
    inputs:
-      release_type:
-        description: 'Release Options'
+      tag:
+        description: 'Tag'
         required: true
-        default: 'Initial Release'
-        type: choice
-        options:
-          - Initial Release
-          - Redeploy
+        default: '0.0.1'
+        type: string
 
 jobs:  
   build:
@@ -47,3 +42,4 @@ jobs:
           artifacts: "*.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
+          tag: ${{ tag }}
