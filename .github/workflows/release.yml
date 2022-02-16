@@ -1,0 +1,35 @@
+
+name: release
+
+on:
+  push:
+    tags: 
+      - '*'
+
+jobs:  
+  build:
+    runs-on: ubuntu-latest    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1.9.0
+        with:
+          dotnet-version: 6.x.x
+        
+      - name: Build
+        run: |
+          dotnet publish ./src/qest/ -o ./pub --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
+          dotnet publish ./src/qest/ -o ./pub --runtime win-x64 -c Release --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
+          
+      - name: Create Packages
+        run: |
+          gzip -c ./pub/qest > ./qest-linux-x64.gz
+          gzip -c ./pub/qest.exe > ./qest-win-x64.gz
+          
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "*.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
