@@ -138,11 +138,17 @@ Each __Script__ entity is ran atomically: the strings / files are concatenated i
 The types used are the text representation of the _SqlDBType_ C# enum.
 The supported types are:
  - Bit
- - Date
- - DateTime
- - DateTimeOffset
- - Float
- - Int
- - NVarChar
  - TinyInt
+ - SmallInt
+ - BigInt
+ - Int
+ - Float
+ - Real
+ - Decimal
+ - Money
+ - NVarChar
+ - DateTime
+ - DateTime2
+ - DateTimeOffset
+ - Date
  - Time
