@@ -44,7 +44,7 @@ else if (pars.Contains("--folder"))
         ExitParNotValid("--folder");
     }
     else
-        foreach (var item in Directory.GetFiles(pars[idx]))
+        foreach (var item in Directory.GetFiles(pars[idx], "*.yml"))
             TestCollection.AddRange(SafeReadYaml(item));
 }
 else
