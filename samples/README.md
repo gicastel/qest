@@ -5,7 +5,11 @@ Clone or download this repo.
 
 ## Step 2
 ### Build your local image...
-Open a terminal in the folder where you have downloaded the data. Then run:
+Go to the root folder of the project and run:
+```
+docker build . -t qest
+```
+Then, switch here in the `samples` folder and run:
 ```
 docker build . -t qestsamples
 docker run -t qestsamples
