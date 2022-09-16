@@ -29,5 +29,26 @@ namespace TestBase
 
             _ => throw new ArgumentOutOfRangeException(nameof(type), $"Type not expected: {type}"),
         };
+
+        internal static SqlDbType MapSqlType(string type) => type switch
+        {
+            "bit" => SqlDbType.Bit,
+            "tinyint" => SqlDbType.TinyInt,
+            "smallint" => SqlDbType.SmallInt,
+            "bigint" => SqlDbType.BigInt,
+            "float" => SqlDbType.Float,
+            "int" => SqlDbType.Int,
+            "nvarchar" => SqlDbType.NVarChar,
+            "datetime" => SqlDbType.DateTime,
+            "datetime2" => SqlDbType.DateTime2,
+            "date" => SqlDbType.Date,
+            "datetimetoffset" => SqlDbType.DateTimeOffset,
+            "time" => SqlDbType.Time,
+            "real" => SqlDbType.Real,
+            "decimal" => SqlDbType.Decimal,
+            "money" => SqlDbType.Decimal,
+
+            _ => throw new ArgumentOutOfRangeException(nameof(type), $"Type not expected: {type}"),
+        };
     }
 }

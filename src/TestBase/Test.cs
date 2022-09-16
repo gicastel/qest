@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
+using YamlDotNet.Serialization;
 
 namespace TestBase
 {
@@ -7,6 +8,8 @@ namespace TestBase
     {
         public string Name { get; set; }
         public List<Script>? Before { get; set; }
+
+        [YamlIgnore]
         public SqlConnection? Connection { get; set; }
         public TestCommand Command { get; set; }
         public ResultGroup Results { get; set; }
@@ -266,5 +269,7 @@ namespace TestBase
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.White;
         }
+
+        public static SqlDbType MapType(string type) => Utils.MapSqlType(type);
     }
 }

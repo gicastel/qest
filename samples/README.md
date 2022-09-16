@@ -7,12 +7,12 @@ Clone or download this repo.
 ### Build your local image...
 Go to the root folder of the project and run:
 ```
-docker build . -t qest
+docker build -f bundle.dockerfile . -t qest:bundle
 ```
 Then, switch here in the `samples` folder and run:
 ```
 docker build . -t qestsamples
-docker run -t qestsamples
+docker run --rm -t qestsamples
 ```
 ### ...or run directly from the registry
 Build the sample database:
@@ -23,11 +23,11 @@ dotnet build ./sampleDb/ -c Release -o ./dacpac
 Then run the command:
 ```
 docker run --rm -t \
-    -v {full/local/path}/tests:/qest/tests \
-    -v {full/local/path}/scripts:/qest/scripts \
-    -v {full/local/path}/dacpac:/qest/db \
+    -v {full/local/path}/tests:/tests \
+    -v {full/local/path}/scripts:/scripts \
+    -v {full/local/path}/dacpac:/db \
     --env DACPAC={filename} \
-    ghcr.io/geims83/qest:latest
+    ghcr.io/geims83/qest:bundle
 ``` 
 
 ## Step 3: you're done!

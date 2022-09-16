@@ -13,16 +13,38 @@ The tool does not implement a transaction logic for the tests: you have to provi
 This is by design, to not interfere with the transaction logic that may be implemented in the stored procedures.
 
 ## Quickstart
-### Local
+### Local binary
 Run tests in a single file:
 ```
-./qest  --file relative/path/to/file.yml --tcs targetDatabaseConnectionString
+./qest run --file relative/path/to/file.yml --tcs targetDatabaseConnectionString
 ```
 Run all tests in a folder:
 ```
-./qest --folder relative/path/to/folder --tcs targetDatabaseConnectionString
+./qest run --folder relative/path/to/folder --tcs targetDatabaseConnectionString
 ```
-### Container
+Generate templates from the database into an output directory:
+```
+./qest run --folder relative/path/to/folder --tcs targetDatabaseConnectionString
+```
+### Local container, provided database server
+Same options as the local binary version, but with a provided runtime.
+```
+docker run --rm -t \
+    -v {full/local/path/to/test/folder}:/tests \
+    -v {full/local/path/to/scripts/folder}:/scripts \
+    qest:standalone \
+    run --folder tests --tcs targetDatabaseConnectionString
+```
+or:
+```
+docker run --rm -t \
+    -v {full/local/path/to/template/folder}:/templates \
+    qest:standalone \
+    generate --folder templates --tcs targetDatabaseConnectionString
+```
+
+### Bundle container
+This container contains (;)) Microsoft SQL Server 2019 *and* qest executables, so you can deploy the database and run tests in a pristine environment.
 You need to provide:
 - the `dacpac` file of your database: the folder containing it wil be mounted on the `/quest/db` container folder
 - the YAML files: the folder containing them wil be mounted on the `/quest/tests` container folder
@@ -33,12 +55,12 @@ Please note: for this default image to work, YAML files have to reference the _F
 
 Run the image binding the `tests`, `scripts` and `db` directories and providing the correct environment variables:
 ```
-docker run --rm \
-    -v {full/local/path/to/test/folder}:/qest/tests \
-    -v {full/local/path/to/scripts/folder}:/qest/scripts \
-    -v {full/local/path/to/dacpac/folder}:/qest/db \
+docker run --rm -t \
+    -v {full/local/path/to/test/folder}:/tests \
+    -v {full/local/path/to/scripts/folder}:/scripts \
+    -v {full/local/path/to/dacpac/folder}:/db \
     --env DACPAC={filenameWithoutExtension} \
-    ghcr.io/geims83/qest:latest
+    ghcr.io/geims83/qest:bundle
 ``` 
 ## Samples
 See [samples folder](samples/README.md).

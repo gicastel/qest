@@ -1,4 +1,5 @@
-DockerFile
+bundle.dockerfile
+standalone.dockerfile
 .gitattributes
 .gitignore
 Readme.md
