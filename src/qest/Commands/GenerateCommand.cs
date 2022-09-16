@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using TestBase;
 using YamlDotNet.Serialization;
@@ -46,13 +47,7 @@ namespace qest.Commands
                 string currentSchema = reader.GetString(0);
                 string currentSp = reader.GetString(1);
 
-                Test currentTest = new();
-                currentTest.Name = $"{currentSchema}.{currentSp}";
-                currentTest.Command = new();
-                currentTest.Command.Parameters = new List<TestCommandParameter>();
-                currentTest.Command.CommandText = $"EXEC {currentTest.Name}";
-                currentTest.Results = new ResultGroup();
-                currentTest.Results.OutputParameters = new List<OutputParameter>();
+                Test currentTest = GenerateNewTest(currentSchema, currentSp);
 
                 while (await reader.ReadAsync())
                 {
@@ -66,14 +61,10 @@ namespace qest.Commands
                         currentSchema = rowSchema;
                         currentSp = rowSp;
 
-                        currentTest = new();
-                        currentTest.Name = $"{currentSchema}.{currentSp}";
-                        currentTest.Command = new();
-                        currentTest.Command.Parameters = new List<TestCommandParameter>();
-                        currentTest.Command.CommandText = $"EXEC {currentTest.Name}";
-                        currentTest.Results = new ResultGroup();
-                        currentTest.Results.OutputParameters = new List<OutputParameter>();
+                        currentTest = GenerateNewTest(rowSchema, rowSp);
                     }
+
+                    var currentStep = currentTest.Steps.First();
 
                     var parameterName = reader.GetString(3);
                     var parameterType = reader.GetString(4);
@@ -86,15 +77,11 @@ namespace qest.Commands
                         outputPar.Value = "?";
                         outputPar.Type = Test.MapType(parameterType);
 
-                        currentTest.Results.OutputParameters.Add(outputPar);
+                        currentStep.Results.OutputParameters!.Add(outputPar);
                     }
                     else
                     {
-                        var inputPar = new TestCommandParameter();
-                        inputPar.Name = parameterName[1..];
-                        inputPar.Type = Test.MapType(parameterType);
-
-                        currentTest.Command.Parameters.Add(inputPar);
+                        currentStep.Command.Parameters!.Add(parameterName[1..], parameterType);
                     }
                 }
 
@@ -103,9 +90,31 @@ namespace qest.Commands
             }
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(ex.ToString());
                 Environment.Exit(1);
+                Console.ResetColor();
             }
+        }
+
+        private static Test GenerateNewTest(string schemaName, string spName)
+        {               
+            Test currentTest = new();
+            currentTest.Steps = new();
+            TestStep currentStep = new();
+            currentTest.Steps.Add(currentStep);
+            TestCommand currentCommand = new();
+            currentCommand.Parameters = new();
+            currentStep.Command = currentCommand;
+            currentStep.Results = new ResultGroup();
+            currentStep.Results.OutputParameters = new List<OutputParameter>();
+
+            string completeName = $"[{schemaName}].[{spName}]";
+            currentTest.Name = $"{completeName}";
+            currentTest.Description = $"Template for {completeName} tests";
+            currentCommand.CommandText = $"EXEC {completeName}";
+
+            return currentTest;
         }
 
         static async Task SafeWriteYamlAsync(DirectoryInfo folder, Test testTemplate)
@@ -121,12 +130,14 @@ namespace qest.Commands
                 using var stream = new StreamWriter(output.FullName);
                 string yaml = serializer.Serialize(testTemplate);
                 await stream.WriteAsync(yaml);
-
+                
                 Console.WriteLine($"Created template {output.Name}");
             }
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error creating template for {output.Name}: {ex.Message}");
+                Console.ResetColor();
             }
         }
     }
