@@ -7,22 +7,18 @@ namespace TestBase
     public class Test
     {
         public string Name { get; set; }
-        public List<Script>? Before { get; set; }
-
-        [YamlIgnore]
+        public string Description { get; set; }
+        public Scripts? Before { get; set; }
         public SqlConnection? Connection { get; set; }
-        public TestCommand Command { get; set; }
-        public ResultGroup Results { get; set; }
-        public List<Assert>? Asserts { get; set; }
-        public List<Script>? After { get; set; }
+        public List<TestStep> Steps { get; set; }
+        public Scripts? After { get; set; }
+        public Dictionary<string, object>? Variables { get; set; }
 
-        private bool IsPass { get; set; }
         private List<(string Message, bool? IsError)>? Report { get; set; }
 
         public bool Run()
         {
             Report = new();
-            IsPass = true;
 
             ReportAdd($"-----------------------------------------------------------------------------------");
             ReportAdd($"Running Test: {this.Name}");
@@ -33,9 +29,9 @@ namespace TestBase
                 return false;
             }
 
-            if (Command == null)
+            if (Steps == null)
             {
-                ReportAdd($"FATAL: Test Command null", true);
+                ReportAdd($"FATAL: TestCases null", true);
                 return false;
             }
 
@@ -43,229 +39,206 @@ namespace TestBase
             {
                 Connection.Open();
 
-                // data prep
-                if (Before != null)
+                Before?.Run(this, "Before");
+
+                foreach (var testCase in Steps)
                 {
-                    SqlTransaction loadData = Connection.BeginTransaction();
-                    try
-                    {
-                        foreach (var item in Before)
-                        {
-                            string script = item.Compact();
-                            if (script.Length > 0)
-                            {
-                                ReportAdd("Running Before scripts...");
-                                var cmd = new SqlCommand(script, Connection, loadData);
-                                cmd.ExecuteNonQuery();
-                                ReportAdd("Completed.", false);
-                            }
-                        }
-                        loadData.Commit();
-                    }
-                    catch
-                    {
-                        loadData.Rollback();
-                        throw;
-                    }
-                }
-
-                SqlCommand testCmd = new(Command.CommandText, Connection);
-                testCmd.CommandType = CommandType.StoredProcedure;
-
-                // add input pars
-                if (Command.Parameters != null)
-                    foreach (var input in Command.Parameters)
-                    {
-                        testCmd.Parameters.AddWithValue($"@{input.Name}", input.Value);
-                    }
-
-                // add output pars
-                List<SqlParameter> outPars = new();
-                if (Results != null)
-                {
-                    if (Results.OutputParameters != null)
-                        foreach (var output in Results.OutputParameters)
-                        {
-                            var outPar = testCmd.Parameters.Add($"@{output.Name}", output.Type);
-                            outPar.Direction = ParameterDirection.Output;
-                            outPars.Add(outPar);
-                        }
-
-                    // add rc if exists
-                    if (Results.ReturnCode.HasValue)
-                    {
-                        var rc = Results.ReturnCode;
-                        var outPar = testCmd.Parameters.Add($"@rc", SqlDbType.Int);
-                        outPar.Direction = ParameterDirection.ReturnValue;
-                        outPars.Add(outPar);
-                    }
-                }
-
-                using var reader = testCmd.ExecuteReader();
-
-                if (Results != null)
-                {
-                    // resultsets
-                    if (Results.ResultSets != null)
-                    {
-                        var resultSets = Results.ResultSets;
-
-                        List<DataTable> dataTables = new();
-
-                        foreach (var resultSet in resultSets)
-                        {
-                            DataTable dataTable = resultSet.GetDataTable();
-
-                            while (reader.Read())
-                            {
-                                DataRow row = dataTable.NewRow();
-
-                                for (int f = 0; f < resultSet.Columns.Count; f++)
-                                {
-                                    var column = resultSet.Columns[f];
-
-                                    if (reader.IsDBNull(f))
-                                        row[column.Name] = DBNull.Value;
-                                    else
-                                        row[column.Name] = Convert.ChangeType(reader.GetValue(f), Utils.MapType(column.Type));
-                                }
-                                dataTable.Rows.Add(row);
-                            }
-
-                            dataTables.Add(dataTable);
-                            reader.NextResult();
-                        }
-
-                        foreach (var expected in Results.ResultSets)
-                        {
-                            ReportAdd($"Checking ResultSet: {expected.Name}");
-                            var currRes = dataTables.Where(d => d.TableName == expected.Name).FirstOrDefault();
-
-                            if (currRes == null)
-                            {
-                                ReportAdd($"Resultset {expected.Name} not found", true);
-                                continue;
-                            }
-
-                            if (expected.RowNumber != null)
-                            {
-                                if (expected.RowNumber != currRes.Rows.Count)
-                                {
-                                    ReportAdd($"ResultSet {expected.Name} row number: {currRes.Rows.Count} != {expected.RowNumber}", true);
-                                    continue;
-                                }
-                            }
-
-                            ReportAdd($"Result {expected.Name}: OK", false);
-                        }
-                    }
-
-                    reader.Close();
-
-                    //output parameters
-                    if (Results.OutputParameters != null)
-                    {
-                        foreach (var expected in Results.OutputParameters)
-                        {
-                            ReportAdd($"Checking Output Parameter: {expected.Name}");
-                            var currRes = outPars.Where(p => p.ParameterName == $"@{expected.Name}").FirstOrDefault();
-                            if (currRes == null)
-                            {
-                                ReportAdd($"Output Parameter {expected.Name} not found", true);
-                                continue;
-                            }
-
-                            if (expected.Value != null)
-                            {
-                                if (!currRes.Value.Equals(currRes.Value))
-                                {
-                                    ReportAdd($"Ouput Parameter {expected.Name}: {currRes.Value} != {expected.Value}", true);
-                                    continue;
-                                }
-                            }
-
-                            ReportAdd($"Result {expected.Name}: {expected.Value} == {currRes.Value}", false);
-                        }
-                    }
-
-                    //returncode
-                    if (Results.ReturnCode.HasValue)
-                    {
-                        var expected = Results.ReturnCode.Value;
-                        ReportAdd($"Checking Return Code");
-                        var rcPar = outPars.Where(p => p.ParameterName == $"@rc").FirstOrDefault();
-                        if (rcPar == null)
-                        {
-                            ReportAdd($"Return Code not found", true);
-                        }
-                        else
-                        {
-                            if (expected != Convert.ToInt32(rcPar.Value))
-                                ReportAdd($"Return Code: {rcPar.Value} != {expected}", true);
-                            else
-                                ReportAdd($"Return Code: {expected} == {expected}", false);
-                        }
-                    }
-                }
-
-                // asserts
-                if (Asserts != null)
-                {
-                    foreach (var assert in Asserts)
-                    {
-                        SqlCommand cmd = new(assert.SqlQuery, Connection);
-                        var result = cmd.ExecuteScalar();
-                        if (result != null)
-                        {
-                            bool pass = false;
-                            var scalarType = Utils.MapType(assert.ScalarType);
-                            pass = Convert.ChangeType(assert.ScalarValue, scalarType).Equals(Convert.ChangeType(result, scalarType));
-
-                            if (pass)
-                                ReportAdd($"Assert {assert.SqlQuery}: {result} == {assert.ScalarValue}", false);
-                            else
-                                ReportAdd($"Assert {assert.SqlQuery}: {result} != {assert.ScalarValue}", true);
-                        }
-                        else
-                            ReportAdd($"Assert {assert.SqlQuery}: Result NULL", true);
-                    }
+                    RunTestStep(this, testCase);
                 }
             }
             catch (Exception ex)
             {
-                ReportAdd($"FATAL: {ex.Message}", true);
+                ReportAdd($"FATAL: {ex}", true);
             }
             finally
             {
-                if (After != null)
-                {
-                    foreach (var script in After)
-                    {
-                        string cmd = script.Compact();
-                        ReportAdd("Running After scripts...");
-                        var delete = new SqlCommand(cmd, Connection);
-                        delete.ExecuteNonQuery();
-                        ReportAdd("Completed.", false);
-                    }
-                }
+                After?.Run(this, "After");
                 Connection.Close();
             }
 
-            IsPass = !Report.Where(m => m.IsError.HasValue && m.IsError.Value).Any();
+            var isPass = !Report.Where(m => m.IsError.HasValue && m.IsError.Value).Any();
 
-            ReportAdd($"Test {Name}: {(IsPass ? "OK":"KO")}", !IsPass);
+            ReportAdd($"Test {Name}: {(isPass ? "OK" : "KO")}", !isPass);
 
-            return IsPass;
+            return isPass;
         }
 
-        private void ReportAdd(string message, bool? isError = null)
+        private void RunTestStep(Test parentTest, TestStep step)
+        {
+            ReportAdd($"Running Test {parentTest.Name} - Step: {step.Name}");
+            SqlCommand testCmd = new(step.Command.CommandText, Connection);
+            testCmd.CommandType = CommandType.StoredProcedure;
+
+            // add input pars
+            if (step.Command.Parameters != null)
+                foreach (var input in step.Command.Parameters)
+                {
+                    testCmd.Parameters.AddWithValue($"@{input.Key}", input.Value?.ReplaceVarsInParameter(Variables));
+                }
+
+            // add output pars
+            List<SqlParameter> outPars = new();
+            if (step.Results != null)
+            {
+                if (step.Results.OutputParameters != null)
+                    foreach (var output in step.Results.OutputParameters)
+                    {
+                        var outPar = testCmd.Parameters.Add($"@{output.Name}", output.Type);
+                        outPar.Direction = ParameterDirection.Output;
+                        outPars.Add(outPar);
+                    }
+
+                // add rc if exists
+                if (step.Results.ReturnCode.HasValue)
+                {
+                    var rc = step.Results.ReturnCode;
+                    var outPar = testCmd.Parameters.Add($"@rc", SqlDbType.Int);
+                    outPar.Direction = ParameterDirection.ReturnValue;
+                    outPars.Add(outPar);
+                }
+            }
+
+            using var reader = testCmd.ExecuteReader();
+
+            if (step.Results != null)
+            {
+                // resultsets
+                if (step.Results.ResultSets != null)
+                {
+                    var resultSets = step.Results.ResultSets;
+
+                    List<DataTable> dataTables = new();
+
+                    foreach (var resultSet in resultSets)
+                    {
+                        DataTable dataTable = resultSet.GetDataTable();
+
+                        while (reader.Read())
+                        {
+                            DataRow row = dataTable.NewRow();
+
+                            for (int f = 0; f < resultSet.Columns.Count; f++)
+                            {
+                                var column = resultSet.Columns[f];
+
+                                if (reader.IsDBNull(f))
+                                    row[column.Name] = DBNull.Value;
+                                else
+                                    row[column.Name] = Convert.ChangeType(reader.GetValue(f), Utils.MapType(column.Type));
+                            }
+                            dataTable.Rows.Add(row);
+                        }
+
+                        dataTables.Add(dataTable);
+                        reader.NextResult();
+                    }
+
+                    foreach (var expected in step.Results.ResultSets)
+                    {
+                        ReportAdd($"Checking ResultSet: {expected.Name}");
+                        var currRes = dataTables.Where(d => d.TableName == expected.Name).FirstOrDefault();
+
+                        if (currRes == null)
+                        {
+                            ReportAdd($"Resultset {expected.Name} not found", true);
+                            continue;
+                        }
+
+                        if (expected.RowNumber != null)
+                        {
+                            if (expected.RowNumber != currRes.Rows.Count)
+                            {
+                                ReportAdd($"ResultSet {expected.Name} row number: {currRes.Rows.Count} != {expected.RowNumber}", true);
+                                continue;
+                            }
+                        }
+
+                        ReportAdd($"Result {expected.Name}: OK", false);
+                    }
+                }
+
+                reader.Close();
+
+                //output parameters
+                if (step.Results.OutputParameters != null)
+                {
+                    foreach (var expected in step.Results.OutputParameters)
+                    {
+                        ReportAdd($"Checking Output Parameter: {expected.Name}");
+                        var currRes = outPars.Where(p => p.ParameterName == $"@{expected.Name}").FirstOrDefault();
+                        if (currRes == null)
+                        {
+                            ReportAdd($"Output Parameter {expected.Name} not found", true);
+                            continue;
+                        }
+
+                        if (expected.Value != null)
+                        {
+                            if (!currRes.Value.Equals(currRes.Value))
+                            {
+                                ReportAdd($"Ouput Parameter {expected.Name}: {currRes.Value} != {expected.Value}", true);
+                                continue;
+                            }
+                        }
+
+                        ReportAdd($"Result {expected.Name}: {expected.Value} == {currRes.Value}", false);
+                    }
+                }
+
+                //returncode
+                if (step.Results.ReturnCode.HasValue)
+                {
+                    var expected = step.Results.ReturnCode.Value;
+                    ReportAdd($"Checking Return Code");
+                    var rcPar = outPars.Where(p => p.ParameterName == $"@rc").FirstOrDefault();
+                    if (rcPar == null)
+                    {
+                        ReportAdd($"Return Code not found", true);
+                    }
+                    else
+                    {
+                        if (expected != Convert.ToInt32(rcPar.Value))
+                            ReportAdd($"Return Code: {rcPar.Value} != {expected}", true);
+                        else
+                            ReportAdd($"Return Code: {expected} == {expected}", false);
+                    }
+                }
+            }
+
+            // asserts
+            if (step.Asserts != null)
+            {
+                foreach (var assert in step.Asserts)
+                {
+                    var assertSqlQuery = assert.SqlQuery.ReplaceVars(Variables);
+                    var assertScalarValue = assert.ScalarValue.ReplaceVarsInParameter(Variables);
+                    SqlCommand cmd = new(assertSqlQuery, Connection);
+                    var result = cmd.ExecuteScalar();
+                    if (result != null)
+                    {
+                        bool pass = false;
+                        var scalarType = Utils.MapType(assert.ScalarType);
+                        pass = Convert.ChangeType(assertScalarValue, scalarType).Equals(Convert.ChangeType(result, scalarType));
+
+                        if (pass)
+                            ReportAdd($"Assert {assertSqlQuery}: {result} == {assertScalarValue}", false);
+                        else
+                            ReportAdd($"Assert {assertSqlQuery}: {result} != {assertScalarValue}", true);
+                    }
+                    else
+                        ReportAdd($"Assert {assertSqlQuery}: Result NULL", true);
+                }
+            }
+        }
+
+        internal void ReportAdd(string message, bool? isError = null)
         {
             message = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") + " " + message;
             Report.Add((message, isError));
 
             if (isError.HasValue)
-                Console.ForegroundColor = isError.Value? ConsoleColor.Red : ConsoleColor.Green;
-            
+                Console.ForegroundColor = isError.Value ? ConsoleColor.Red : ConsoleColor.Green;
+
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.White;
         }
