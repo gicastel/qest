@@ -6,8 +6,8 @@ on:
     tags: 
       - '*'
 
-jobs:  
-  build:
+jobs:
+  build-binaries:
     runs-on: ubuntu-latest    
     steps:
       - uses: actions/checkout@v2
@@ -33,3 +33,35 @@ jobs:
           artifacts: "*.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
+
+  build-docker-standalone:
+    runs-on: ubuntu-latest    
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out code
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Build & push Docker standalone image
+        with:
+          image: quest
+          tags: standalone-latest, standalone-${{ github.ref_name }}
+          registry: ghcr.io
+          dockerfile: standalone.dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+  
+  build-docker-bundle:
+    runs-on: ubuntu-latest    
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out code
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Build & push Docker bundle image
+        with:
+          image: quest
+          tags: bundle-latest, bundle-${{ github.ref_name }}
+          registry: ghcr.io
+          dockerfile: bundle.dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
