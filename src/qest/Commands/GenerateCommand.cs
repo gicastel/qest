@@ -72,12 +72,13 @@ namespace qest.Commands
 
                     if (isOutput)
                     {
+                        currentStep.Results.OutputParameters ??= new();
                         var outputPar = new OutputParameter();
                         outputPar.Name = parameterName[1..];
                         outputPar.Value = "?";
                         outputPar.Type = Test.MapType(parameterType);
 
-                        currentStep.Results.OutputParameters!.Add(outputPar);
+                        currentStep.Results.OutputParameters.Add(outputPar);
                     }
                     else
                     {
@@ -107,12 +108,12 @@ namespace qest.Commands
             currentCommand.Parameters = new();
             currentStep.Command = currentCommand;
             currentStep.Results = new ResultGroup();
-            currentStep.Results.OutputParameters = new List<OutputParameter>();
 
-            string completeName = $"[{schemaName}].[{spName}]";
+            string completeName = $"{schemaName}.{spName}";
             currentTest.Name = $"{completeName}";
             currentTest.Description = $"Template for {completeName} tests";
-            currentCommand.CommandText = $"EXEC {completeName}";
+            currentStep.Name = $"Step for {completeName} test";
+            currentCommand.CommandText = $"[{schemaName}].[{spName}]";
 
             return currentTest;
         }
@@ -136,7 +137,7 @@ namespace qest.Commands
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error creating template for {output.Name}: {ex.Message}");
+                Console.WriteLine($"Error creating template {output.Name}: {ex.Message}");
                 Console.ResetColor();
             }
         }
