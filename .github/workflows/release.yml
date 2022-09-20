@@ -43,7 +43,7 @@ jobs:
       - uses: mr-smithers-excellent/docker-build-push@v5
         name: Build & push Docker standalone image
         with:
-          image: quest
+          image: qest
           tags: standalone-latest, standalone-${{ github.ref_name }}
           registry: ghcr.io
           dockerfile: standalone.dockerfile
@@ -59,7 +59,7 @@ jobs:
       - uses: mr-smithers-excellent/docker-build-push@v5
         name: Build & push Docker bundle image
         with:
-          image: quest
+          image: qest
           tags: bundle-latest, bundle-${{ github.ref_name }}
           registry: ghcr.io
           dockerfile: bundle.dockerfile

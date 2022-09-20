@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:6.0 as build
 
+LABEL org.opencontainers.image.source=https://github.com/geims83/qest
+
 COPY ./src ./src
 RUN dotnet publish /src/qest/ -o /output --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true
 
