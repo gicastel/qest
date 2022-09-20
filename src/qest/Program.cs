@@ -23,7 +23,7 @@ namespace qest
             var tcs = Options.ConnectionStringOption();
             var folder = Options.FolderOption();
             var file = Options.FileOption();
-
+          
             runCommand.AddOption(tcs);
             runCommand.AddOption(folder);
             runCommand.AddOption(file);
