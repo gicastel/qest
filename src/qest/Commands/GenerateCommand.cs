@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -128,7 +127,8 @@ namespace qest.Commands
 
             try
             {
-                using var stream = new StreamWriter(output.FullName);
+                using var stream = new StreamWriter(output.FullName, false);
+
                 string yaml = serializer.Serialize(testTemplate);
                 await stream.WriteAsync(yaml);
                 
