@@ -1,0 +1,19 @@
+name: dbo.SampleSP
+description: Template for dbo.SampleSP tests
+before: 
+steps:
+- name: Step for dbo.SampleSP test
+  command:
+    commandText: '[dbo].[SampleSP]'
+    parameters:
+      newValue: int
+  results:
+    resultSets: 
+    outputParameters:
+    - name: oldValue
+      type: Int
+      value: '?'
+    returnCode: 
+  asserts: 
+after: 
+variables: 
