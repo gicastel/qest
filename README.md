@@ -1,5 +1,3 @@
-# qest
-
 ## What is qest?
 A simple, cross platform, command line tool to test MSSQL procedures without the needs of a SSDT project or custom procedures / assemblies.
 
@@ -44,14 +42,14 @@ docker run --rm -t \
 ```
 
 ### Bundle container
-This container contains (;)) Microsoft SQL Server 2019 *and* qest executables, so you can deploy the database and run tests in a pristine environment.
+This container contains ( ;-) ) Microsoft SQL Server 2019 *and* qest executables, so you can deploy the database and run tests in a pristine environment.
 You need to provide:
 - the `dacpac` file of your database: the folder containing it wil be mounted on the `/quest/db` container folder
 - the YAML files: the folder containing them wil be mounted on the `/quest/tests` container folder
 - the scripts: the folder containing them wil be mounted on the `/quest/scripts` container folder
 
 
-Please note: for this default image to work, YAML files have to reference the _File_ scripts in the `scripts/{filename}` form. See [docs](docs/YamlFormat.md#script).
+Please note: for this default image to work, YAML files have to reference the _File_ scripts in the `scripts/{filename}` form. See [docs](https://github.com/Geims83/qest/wiki/YamlFormat).
 
 Run the image binding the `tests`, `scripts` and `db` directories and providing the correct environment variables:
 ```
@@ -62,8 +60,6 @@ docker run --rm -t \
     --env DACPAC={filenameWithoutExtension} \
     ghcr.io/geims83/qest:bundle
 ``` 
-## Samples
-See [samples folder](samples/README.md).
 
-## YAML test definition
-See [docs](docs/YamlFormat.md).
+## Got _qest_ ...ions?
+Go to the [wiki](https://github.com/Geims83/qest/wiki)!
