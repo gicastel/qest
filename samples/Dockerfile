@@ -4,7 +4,7 @@ WORKDIR /build
 COPY ./sampleDb .
 RUN dotnet build . -c Release -o /dacpac
 
-FROM ghcr.io/geims83/qest:latest
+FROM qest:bundle
 
 ENV DACPAC=sampleDb
 

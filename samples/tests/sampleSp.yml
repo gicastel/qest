@@ -1,112 +1,105 @@
-- name: SampleSP - Ok
+- name: SampleSP
+  variables:
+    nameVar: SampleName
+    newValueVar: 1
   before:
-  - type: File
-    values: 
-      - scripts/SampleData.sql
-  command:
-    commandText: dbo.SampleSp
-    parameters:
-    - name: name
-      type: NVarChar
-      value: SampleName
-    - name: newValue
-      type: Int
-      value: 1
-  results:
-    resultSets:
-    - name: sampleSpRS1
-      rowNumber: 1
-      columns:
-        - name: Name
-          type: NVarChar
-        - name: BitValue
-          type: Bit
-        - name: TinyIntValue
-          type: TinyInt
-        - name: SmallintValue
-          type: Smallint
-        - name: IntValue
-          type: Int
-        - name: BigIntValue
-          type: BigInt
-        - name: FloatValue
-          type: Float
-        - name: RealtValue
-          type: Real
-        - name: DecimalValue
-          type: Decimal
-        - name: MoneyValue
-          type: Money
-        - name: DateTimeValue
-          type: DateTime
-        - name: DateTime2Value
-          type: DateTime2
-        - name: DateTimeOffsetValue
-          type: DateTimeOffset
-        - name: DateValue
-          type: Date
-        - name: TimeValue
-          type: Time  
-    outputParameters:
-    - name: oldValue
-      type: Int
-      value: 0
-    returnCode: 0
-  asserts:
-    - sqlQuery: SELECT COUNT(*) FROM dbo.SampleTable WHERE [IntValue] = 1
-      scalarType: Int
-      scalarValue: 1
+    - type: File
+      values:
+        - scripts/SampleData.sql
+  steps:
+    - name: Test OK
+      command:
+        commandText: dbo.SampleSp
+        parameters:
+          name: "{nameVar}"
+          newValue: "{newValueVar}"
+      results:
+        resultSets:
+          - name: sampleSpRS1
+            rowNumber: 1
+            columns:
+              - name: Name
+                type: NVarChar
+              - name: BitValue
+                type: Bit
+              - name: TinyIntValue
+                type: TinyInt
+              - name: SmallintValue
+                type: Smallint
+              - name: IntValue
+                type: Int
+              - name: BigIntValue
+                type: BigInt
+              - name: FloatValue
+                type: Float
+              - name: RealtValue
+                type: Real
+              - name: DecimalValue
+                type: Decimal
+              - name: MoneyValue
+                type: Money
+              - name: DateTimeValue
+                type: DateTime
+              - name: DateTime2Value
+                type: DateTime2
+              - name: DateTimeOffsetValue
+                type: DateTimeOffset
+              - name: DateValue
+                type: Date
+              - name: TimeValue
+                type: Time
+        outputParameters:
+          - name: oldValue
+            type: Int
+            value: 0
+        returnCode: 0
+      asserts:
+        - sqlQuery: SELECT COUNT(*) FROM dbo.SampleTable WHERE [IntValue] = {newValueVar}
+          scalarType: Int
+          scalarValue: 1
+    - name: Test KO
+      command:
+        commandText: dbo.SampleSp
+        parameters:
+          name: "NoMatchData"
+          newValue: "{newValueVar}"
+      results:
+        resultSets:
+          - name: sampleSpRS1
+            rowNumber: 0
+            columns:
+              - name: Name
+                type: NVarChar
+              - name: BitValue
+                type: Bit
+              - name: TinyIntValue
+                type: TinyInt
+              - name: SmallintValue
+                type: Smallint
+              - name: IntValue
+                type: Int
+              - name: BigIntValue
+                type: BigInt
+              - name: FloatValue
+                type: Float
+              - name: RealtValue
+                type: Real
+              - name: DecimalValue
+                type: Decimal
+              - name: MoneyValue
+                type: Money
+              - name: DateTimeValue
+                type: DateTime
+              - name: DateTime2Value
+                type: DateTime2
+              - name: DateTimeOffsetValue
+                type: DateTimeOffset
+              - name: DateValue
+                type: Date
+              - name: TimeValue
+                type: Time
+        returnCode: 1
   after:
-  - type: File
-    values:
-    - scripts/DeleteTestData.sql
-- name: SampleSP - KO
-  command:
-    commandText: dbo.SampleSp
-    parameters:
-    - name: name
-      type: NVarChar
-      value: NoMatchData
-    - name: newValue
-      type: Int
-      value: 1
-  results:
-    resultSets:
-    - name: sampleSpRS1
-      rowNumber: 0
-      columns:
-        - name: Name
-          type: NVarChar
-        - name: BitValue
-          type: Bit
-        - name: TinyIntValue
-          type: TinyInt
-        - name: SmallintValue
-          type: Smallint
-        - name: IntValue
-          type: Int
-        - name: BigIntValue
-          type: BigInt
-        - name: FloatValue
-          type: Float
-        - name: RealtValue
-          type: Real
-        - name: DecimalValue
-          type: Decimal
-        - name: MoneyValue
-          type: Money
-        - name: DateTimeValue
-          type: DateTime
-        - name: DateTime2Value
-          type: DateTime2
-        - name: DateTimeOffsetValue
-          type: DateTimeOffset
-        - name: DateValue
-          type: Date
-        - name: TimeValue
-          type: Time  
-    returnCode: 1
-  after:
-  - type: File
-    values:
-    - scripts/DeleteTestData.sql
+    - type: File
+      values:
+        - scripts/DeleteTestData.sql

@@ -1,110 +1,62 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using qest.Commands;
+using System.CommandLine;
+using System.Threading.Tasks;
 
-using System.Data.SqlClient;
-using TestBase;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-
-
-if (args.Length == 0)
+namespace qest
 {
-    Console.WriteLine("----------------------------------------------------------------------");
-    Console.WriteLine("Welcome!");
-    Console.WriteLine("Available parameters:");
-    Console.WriteLine("--file       A YAML test file                                Optional*");
-    Console.WriteLine("--folder     A folder containing YAML test files             Optional*");
-
-    Console.WriteLine("--tcs        MSSQL Server target connectionstring            Required");
-    Console.WriteLine();
-    Console.WriteLine("*One of --file or --folder is Required.");
-    Environment.Exit(1);
-}
-
-List<Test> TestCollection = new List<Test>();
-List<string> pars = args.ToList();
-
-if (pars.Contains("--file"))
-{
-    int idx = pars.IndexOf("--file") + 1;
-    if (idx > pars.Count || !File.Exists(pars[idx]))
+    internal class Program
     {
-        // if par index out of range or file not exists
-        ExitParNotValid("--file");
+        static async Task Main(string[] args)
+        {
+            RootCommand rootCommand = new("Simple, cross platform, command line tool to test MSSQL procedures");
+
+            rootCommand.AddCommand(CreateRunCommand());
+            rootCommand.AddCommand(CreateGenerateCommand());
+
+            await rootCommand.InvokeAsync(args);
+        }
+
+        internal static Command CreateRunCommand()
+        {
+            Command runCommand = new("run", "Run tests defined in YML files.");
+
+            var tcs = Options.ConnectionStringOption();
+            var folder = Options.FolderOption();
+            var file = Options.FileOption();
+          
+            runCommand.AddOption(tcs);
+            runCommand.AddOption(folder);
+            runCommand.AddOption(file);
+
+            runCommand.SetHandler((file, folder, tcs) =>
+                {
+                    RunTests.Run(file, folder, tcs);
+                },
+                file, folder, tcs);
+
+            return runCommand;
+        }
+
+
+        internal static Command CreateGenerateCommand()
+        {
+            var tcs = Options.ConnectionStringOption();
+            var folder = Options.FolderOption();
+            folder.SetDefaultValue("templates");
+
+            Command generateCommand = new("generate", "Generates YML templates from Stored Procedures.");
+
+            generateCommand.AddOption(tcs);
+            generateCommand.AddOption(folder);
+
+            generateCommand.SetHandler(async(folder, tcs) =>
+            {
+                await Generate.Run(folder, tcs);
+            },
+                folder, tcs);
+
+            return generateCommand;
+        }
+
     }
-    else
-        TestCollection.AddRange(SafeReadYaml(pars[idx]));
-
-}
-else if (pars.Contains("--folder"))
-{
-    int idx = pars.IndexOf("--folder") + 1;
-    if (idx > pars.Count || !Directory.Exists(pars[idx]))
-    {
-        // if par index out of range or file not exists
-        ExitParNotValid("--folder");
-    }
-    else
-        foreach (var item in Directory.GetFiles(pars[idx], "*.yml"))
-            TestCollection.AddRange(SafeReadYaml(item));
-}
-else
-{
-    Console.WriteLine("One parameter between --file or --folder is mandatory.");
-    Environment.Exit(1);
-}
-
-if (TestCollection.Count == 0)
-{
-    Console.WriteLine("No test loaded");
-    Environment.Exit(1);
-}
-
-string ConnectionString = "";
-
-if (pars.Contains("--tcs"))
-{
-    int idx = pars.IndexOf("--tcs") + 1;
-    if (idx < pars.Count)
-        ConnectionString = pars[idx];
-}
-
-if (ConnectionString.Length == 0)
-    ExitParNotValid("--tcs");
-
-var sqlConnection = new SqlConnection(ConnectionString);
-
-foreach (var test in TestCollection)
-{
-    test.Connection = sqlConnection;
-    bool pass = test.Run();
-    if (!pass)
-        Environment.Exit(1);
-}
-Environment.Exit(0);
-
-List<Test> SafeReadYaml(string fname)
-{
-    List<Test> list = new List<Test>();
-
-    var deserializer = new DeserializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-        .Build();
-
-    try
-    {
-        using var stream = new StreamReader(fname);
-        string yaml = stream.ReadToEnd();
-        list.AddRange(deserializer.Deserialize<List<Test>>(yaml));
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error deserializing {fname}: {ex.Message}");
-    }
-    return list;
-}
-
-void ExitParNotValid(string par)
-{
-    Console.WriteLine($"Parameter {par} not valid.");
-    Environment.Exit(1);
 }

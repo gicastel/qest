@@ -5,7 +5,7 @@
         public ScriptType Type { get; set; }
         public List<string> Values { get; set; }
 
-        public string Compact()
+        public string Compact(Dictionary<string, object>? variables)
         {
             if (Values == null)
                 throw new ArgumentNullException(nameof(Values));
@@ -13,7 +13,7 @@
             switch (this.Type)
             {
                 case ScriptType.Inline:
-                    return string.Join(";", Values);
+                    return string.Join(";", Values).ReplaceVars(variables);
 
                 case ScriptType.File:
                     List<string> list = new List<string>();
@@ -28,7 +28,7 @@
                         else
                             throw new FileNotFoundException(null, item);
                     }
-                    return string.Join(";", list);
+                    return string.Join(";", list).ReplaceVars(variables);
                 default:
                     throw new ArgumentException(nameof(Type));
             }
