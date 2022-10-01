@@ -16,6 +16,7 @@
         },
         "after": { "$ref": "#/definitions/Scripts" }
       },
+      "required": ["name", "steps"],
       "additionalProperties": false
     },
     "TestStep": {
@@ -28,7 +29,7 @@
           "items": { "$ref": "#/definitions/Assert" }
         }
       },
-      "required": ["name", "command"],
+      "required": ["name", "command", "results"],
       "additionalProperties": false
     },
     "TestCommand": {
@@ -90,6 +91,7 @@
         "scalarType": { "$ref": "#/definitions/SqlDbType" },
         "scalarValue": {}
       },
+      "required": ["sqlQuery", "scalarType", "scalarValue"],
       "additionalProperties": false
     },
     "Scripts": {

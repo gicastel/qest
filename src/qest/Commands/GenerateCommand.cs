@@ -30,6 +30,9 @@ namespace qest.Commands
                     p.parameter_id
                 ";
 
+        internal const string yamlSchema = 
+            @"# yaml-language-server: $schema=https://raw.githubusercontent.com/Geims83/qest/features/yamlschema/docs/yamlSchema.json";
+
         internal static async Task Run(DirectoryInfo? folder, string tcs)
         {
             var sqlConnection = new SqlConnection(tcs);
@@ -110,8 +113,7 @@ namespace qest.Commands
 
             string completeName = $"{schemaName}.{spName}";
             currentTest.Name = $"{completeName}";
-            currentTest.Description = $"Template for {completeName} tests";
-            currentStep.Name = $"Step for {completeName} test";
+            currentStep.Name = $"Template for {completeName} test";
             currentCommand.CommandText = $"[{schemaName}].[{spName}]";
 
             return currentTest;
@@ -127,9 +129,10 @@ namespace qest.Commands
 
             try
             {
-                using var stream = new StreamWriter(output.FullName, false);
+                await using var stream = new StreamWriter(output.FullName, false);
 
-                string yaml = serializer.Serialize(testTemplate);
+                string yaml = serializer.Serialize(new Test[] {testTemplate});
+                await stream.WriteLineAsync(yamlSchema);
                 await stream.WriteAsync(yaml);
                 
                 Console.WriteLine($"Created template {output.Name}");
