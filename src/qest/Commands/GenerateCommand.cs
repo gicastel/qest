@@ -31,7 +31,7 @@ namespace qest.Commands
                 ";
 
         internal const string yamlSchema = 
-            @"# yaml-language-server: $schema=https://raw.githubusercontent.com/Geims83/qest/features/yamlschema/docs/yamlSchema.json";
+            @"# yaml-language-server: $schema=https://raw.githubusercontent.com/Geims83/qest/main/docs/yamlSchema.json";
 
         internal static async Task Run(DirectoryInfo? folder, string tcs)
         {
