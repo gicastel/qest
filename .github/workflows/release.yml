@@ -44,7 +44,7 @@ jobs:
         name: Build & push Docker standalone image
         with:
           image: qest
-          tags: standalone-latest, standalone-${{ github.ref_name }}
+          tags: standalone, standalone-latest, standalone-${{ github.ref_name }}
           registry: ghcr.io
           dockerfile: standalone.dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -60,7 +60,7 @@ jobs:
         name: Build & push Docker bundle image
         with:
           image: qest
-          tags: bundle-latest, bundle-${{ github.ref_name }}
+          tags: bundle, bundle-latest, bundle-${{ github.ref_name }}
           registry: ghcr.io
           dockerfile: bundle.dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
