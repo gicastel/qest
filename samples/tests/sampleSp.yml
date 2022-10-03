@@ -1,3 +1,6 @@
+# the next row is a directive for validating this file using Yaml VSCode addin (redhat.vscode-yaml)
+# yaml-language-server: $schema=../../docs/yamlSchema.json
+
 - name: SampleSP
   variables:
     nameVar: SampleName
@@ -25,7 +28,7 @@
               - name: TinyIntValue
                 type: TinyInt
               - name: SmallintValue
-                type: Smallint
+                type: SmallInt
               - name: IntValue
                 type: Int
               - name: BigIntValue
@@ -75,7 +78,7 @@
               - name: TinyIntValue
                 type: TinyInt
               - name: SmallintValue
-                type: Smallint
+                type: SmallInt
               - name: IntValue
                 type: Int
               - name: BigIntValue

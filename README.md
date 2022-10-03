@@ -49,7 +49,7 @@ You need to provide:
 - the scripts: the folder containing them wil be mounted on the `/scripts` container folder
 
 
-Please note: for this default image to work, YAML files have to reference the _File_ scripts in the `scripts/{filename}` form. See [docs](https://github.com/Geims83/qest/wiki/YamlFormat).
+Please note: for this default image to work, YAML files have to reference the _File_ scripts in the `scripts/{filename}` form. See [docs](https://github.com/Geims83/qest/wiki/YAML-test-definition).
 
 Run the image binding the `tests`, `scripts` and `db` directories and providing the correct environment variables:
 ```

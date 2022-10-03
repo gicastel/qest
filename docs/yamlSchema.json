@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+
+  "definitions": {
+    "Test": {
+      "properties": {
+        "name": { "type": "string" },
+        "variables": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "before": { "$ref": "#/definitions/Scripts" },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/TestStep" }
+        },
+        "after": { "$ref": "#/definitions/Scripts" }
+      },
+      "required": ["name", "steps"],
+      "additionalProperties": false
+    },
+    "TestStep": {
+      "properties": {
+        "name": { "type": "string" },
+        "command": { "$ref": "#/definitions/TestCommand" },
+        "results": { "$ref": "#/definitions/ResultGroup" },
+        "asserts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Assert" }
+        }
+      },
+      "required": ["name", "command", "results"],
+      "additionalProperties": false
+    },
+    "TestCommand": {
+      "properties": {
+        "commandText": { "type": "string" },
+        "parameters": { "additionalProperties": true }
+      },
+      "required": ["commandText"],
+      "additionalProperties": false
+    },
+    "ResultGroup": {
+      "properties": {
+        "resultSets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ResultSet" }
+        },
+        "outputParameters": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/OutputParameter" }
+        },
+        "returnCode": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "ResultSet": {
+      "properties": {
+        "name": { "type": "string" },
+        "rowNumber": { "type": "number" },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "$ref": "#/definitions/SqlDbType" }
+            },
+            "required": ["name", "type"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["name", "columns"],
+      "additionalProperties": false
+    },
+    "OutputParameter": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "$ref": "#/definitions/SqlDbType" },
+        "value": {}
+      },
+      "required": ["name", "type", "value"],
+      "additionalProperties": false
+    },
+    "Assert": {
+      "type": "object",
+      "properties": {
+        "sqlQuery": { "type": "string" },
+        "scalarType": { "$ref": "#/definitions/SqlDbType" },
+        "scalarValue": {}
+      },
+      "required": ["sqlQuery", "scalarType", "scalarValue"],
+      "additionalProperties": false
+    },
+    "Scripts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Script"
+      }
+    },
+    "Script": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/ScriptType"
+        },
+        "values": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ScriptType": {
+      "type": "string",
+      "enum": ["File", "Inline"]
+    },
+    "SqlDbType": {
+      "type": "string",
+      "enum": [
+        "Bit",
+        "TinyInt",
+        "SmallInt",
+        "BigInt",
+        "Float",
+        "Int",
+        "NVarChar",
+        "Date",
+        "DateTime",
+        "DateTime2",
+        "DateTimeOffset",
+        "Time",
+        "Real",
+        "Decimal",
+        "Money"
+      ]
+    }
+  },
+
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/Test"
+  },
+  "additionalProperties": false
+}

@@ -7,7 +7,6 @@ namespace TestBase
     public class Test
     {
         public string Name { get; set; }
-        public string Description { get; set; }
         public Scripts? Before { get; set; }
         [YamlIgnore]
         public SqlConnection? Connection { get; set; }
