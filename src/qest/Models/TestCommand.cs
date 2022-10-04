@@ -1,6 +1,6 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
 
-namespace TestBase
+namespace qest.Models
 {
     public class TestCommand
     {

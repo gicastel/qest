@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using TestBase;
+using qest.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace qest.Commands
 {
-    internal static class RunTests
+    internal static class Run
     {
-        internal static void Run(FileInfo? file, DirectoryInfo? folder, string tcs)
+
+        internal static void Execute(FileInfo? file, DirectoryInfo? folder, string tcs)
         {
             List<Test> TestCollection = new List<Test>();
 

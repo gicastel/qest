@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace TestBase
+namespace qest.Models
 {
     public class Assert
     {

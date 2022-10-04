@@ -1,8 +1,11 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using YamlDotNet.Serialization;
 
-namespace TestBase
+namespace qest.Models
 {
     public class Test
     {

@@ -30,7 +30,7 @@ namespace qest
 
             runCommand.SetHandler((file, folder, tcs) =>
                 {
-                    RunTests.Run(file, folder, tcs);
+                    Run.Execute(file, folder, tcs);
                 },
                 file, folder, tcs);
 
@@ -51,7 +51,7 @@ namespace qest
 
             generateCommand.SetHandler(async(folder, tcs) =>
             {
-                await Generate.Run(folder, tcs);
+                await Generate.Execute(folder, tcs);
             },
                 folder, tcs);
 

@@ -1,6 +1,7 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 
-namespace TestBase
+namespace qest.Models
 {
 
     public class ResultGroup

@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using System.Data.SqlClient;
 
-namespace TestBase
+namespace qest.Models
 {
     public class Scripts : List<Script>
     {

@@ -1,4 +1,8 @@
-﻿namespace TestBase
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace qest.Models
 {
     public class Script
     {

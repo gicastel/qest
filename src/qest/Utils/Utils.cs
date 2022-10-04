@@ -1,6 +1,9 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 
-namespace TestBase
+namespace qest
 {
     internal static class Utils
     {
@@ -9,7 +12,7 @@ namespace TestBase
             SqlDbType.Bit => typeof(bool),
             SqlDbType.TinyInt => typeof(byte),
             SqlDbType.SmallInt => typeof(short),
-            SqlDbType.BigInt => typeof(Int64),
+            SqlDbType.BigInt => typeof(long),
             SqlDbType.Float => typeof(double),
             SqlDbType.Int => typeof(int),
             SqlDbType.NVarChar => typeof(string),
@@ -18,9 +21,9 @@ namespace TestBase
             SqlDbType.Date => typeof(DateTime),
             SqlDbType.DateTimeOffset => typeof(DateTimeOffset),
             SqlDbType.Time => typeof(TimeSpan),
-            SqlDbType.Real => typeof(Single),
-            SqlDbType.Decimal => typeof(Decimal),
-            SqlDbType.Money => typeof(Decimal),
+            SqlDbType.Real => typeof(float),
+            SqlDbType.Decimal => typeof(decimal),
+            SqlDbType.Money => typeof(decimal),
 
             _ => throw new ArgumentOutOfRangeException(nameof(type), $"Type not expected: {type}"),
         };

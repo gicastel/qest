@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using TestBase;
+using qest.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -33,7 +33,7 @@ namespace qest.Commands
         internal const string yamlSchema = 
             @"# yaml-language-server: $schema=https://raw.githubusercontent.com/Geims83/qest/0.9.2/docs/yamlSchema.json";
 
-        internal static async Task Run(DirectoryInfo? folder, string tcs)
+        internal static async Task Execute(DirectoryInfo? folder, string tcs)
         {
             var sqlConnection = new SqlConnection(tcs);
 

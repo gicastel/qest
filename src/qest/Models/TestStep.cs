@@ -1,4 +1,6 @@
-﻿namespace TestBase
+﻿using System.Collections.Generic;
+
+namespace qest.Models
 {
     public class TestStep
     {
