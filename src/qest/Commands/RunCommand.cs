@@ -1,73 +1,103 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using qest.Models;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-
+using Spectre.Console;
+using Spectre.Console.Cli;
 namespace qest.Commands
 {
-    internal static class Run
+
+    internal sealed class RunCommand : Command<RunCommand.Settings>
     {
-
-        internal static void Execute(FileInfo? file, DirectoryInfo? folder, string tcs)
+        public sealed class Settings : CommandSettings
         {
-            List<Test> TestCollection = new List<Test>();
+            [Description("Test file")]
+            [CommandOption("-f|--file <FILE>")]
+            public string? File { get; init; }
 
-            if (file is not null)
+            [Description("Folder containing test files")]
+            [CommandOption("-d|--folder <FOLDER>")]
+            public string? Folder { get; init; }
+
+            [Description("Target connection string")]
+            [CommandOption("-c|--tcs <TARGETCONNECTIONSTRING>")]
+            public string ConnectionString { get; init; }
+
+            public override ValidationResult Validate()
             {
-                TestCollection.AddRange(SafeReadYaml(file));
-            }
-            else if (folder is not null)
-            {
-                foreach (var item in folder.EnumerateFiles().Where(f => f.Extension == ".yml" || f.Extension == ".yaml"))
-                    TestCollection.AddRange(SafeReadYaml(item));
-            }
-            else
-            {
-                Console.WriteLine("One parameter between --file or --folder is mandatory.");
-                Environment.Exit(1);
+                if (Folder is null && File is null)
+                {
+                    return ValidationResult.Error("One parameter between FILE or FOLDER must be supplied.");
+                }
+
+                List<Test> testsToRun = new();
+
+                if (File is not null)
+                {
+                    FileInfo fileToLoad = new FileInfo(File);
+                    if (!fileToLoad.Exists)
+                        return ValidationResult.Error("File specified does not exist.");
+                    else
+                        testsToRun.AddRange(Utils.SafeReadYaml(fileToLoad));
+                }
+
+                if (Folder is not null)
+                {
+                    DirectoryInfo folderToLoad = new DirectoryInfo(Folder);
+                    if (!folderToLoad.Exists)
+                        return ValidationResult.Error("Folder specified does not exist.");
+                    else
+                        foreach (var fileToLoad in folderToLoad.EnumerateFiles().Where(f => f.Extension == ".yml" || f.Extension == ".yaml"))
+                            testsToRun.AddRange(Utils.SafeReadYaml(fileToLoad));
+                }
+
+                if (!testsToRun.Any())
+                    return ValidationResult.Error("No tests found in file or folder.");
+
+                var result = Validators.ValidateConnectionString(ConnectionString);
+
+                return result;
             }
 
-            if (TestCollection.Count == 0)
+        }
+
+        private List<Test>? TestCollection;
+
+        public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
+        {
+
+            TestCollection = new();
+
+             if (settings.File is not null)
             {
-                Console.WriteLine("No test loaded");
-                Environment.Exit(1);
+                    FileInfo fileToLoad = new FileInfo(settings.File);
+
+                TestCollection.AddRange(Utils.SafeReadYaml(fileToLoad));
+            }
+            else if (settings.Folder is not null)
+            {
+                DirectoryInfo folderToLoad = new DirectoryInfo(settings.Folder);
+                foreach (var item in folderToLoad.EnumerateFiles().Where(f => f.Extension == ".yml" || f.Extension == ".yaml"))
+                    TestCollection.AddRange(Utils.SafeReadYaml(item));
             }
 
-            var sqlConnection = new SqlConnection(tcs);
+            AnsiConsole.MarkupLine($"[green]{TestCollection.Count} tests loaded.[/]");
+            
+            var sqlConnection = new SqlConnection(settings.ConnectionString);
 
             foreach (var test in TestCollection)
             {
                 test.Connection = sqlConnection;
                 bool pass = test.Run();
                 if (!pass)
-                    Environment.Exit(1);
+                    return 1;
             }
-            Environment.Exit(0);
-        }
 
-        static List<Test> SafeReadYaml(FileInfo file)
-        {
-            List<Test> list = new List<Test>();
-
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            try
-            {
-                using var stream = new StreamReader(file.FullName);
-                string yaml = stream.ReadToEnd();
-                list.AddRange(deserializer.Deserialize<List<Test>>(yaml));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deserializing {file.FullName}: {ex.Message}");
-            }
-            return list;
+            return 0;
         }
     }
 }

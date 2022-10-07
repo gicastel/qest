@@ -1,16 +1,42 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using qest.Models;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using Spectre.Console;
+using Spectre.Console.Cli;
 
 namespace qest.Commands
 {
-    internal static class Generate
+
+    internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
     {
+        public sealed class Settings : CommandSettings
+        {
+            [Description("Folder containing test files")]
+            [CommandOption("-d|--folder <FOLDER>")]
+            [DefaultValue("templates")]
+            public string Folder { get; init; }
+
+            [Description("Target connection string")]
+            [CommandOption("-c|--tcs <TARGETCONNECTIONSTRING>")]
+            public string ConnectionString { get; init; }
+
+            public override ValidationResult Validate()
+            {
+                DirectoryInfo folderToLoad = new DirectoryInfo(Folder);
+                if (!folderToLoad.Exists)
+                    folderToLoad.Create();
+
+                var result = Validators.ValidateConnectionString(ConnectionString);
+                
+                return result;
+            }
+        }
+
         internal const string parametersQuery = @"
                  SELECT
                     SCHEMA_NAME(SCHEMA_ID) AS [Schema],
@@ -30,12 +56,10 @@ namespace qest.Commands
                     p.parameter_id
                 ";
 
-        internal const string yamlSchema = 
-            @"# yaml-language-server: $schema=https://raw.githubusercontent.com/Geims83/qest/0.9.2/docs/yamlSchema.json";
-
-        internal static async Task Execute(DirectoryInfo? folder, string tcs)
+        public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] Settings settings)
         {
-            var sqlConnection = new SqlConnection(tcs);
+            var sqlConnection = new SqlConnection(settings.ConnectionString);
+            DirectoryInfo folder = new DirectoryInfo(settings.Folder);
 
             try
             {
@@ -58,7 +82,7 @@ namespace qest.Commands
 
                     if (currentSchema != rowSchema || currentSp != rowSp)
                     {
-                        await SafeWriteYamlAsync(folder!, currentTest);
+                        await Utils.SafeWriteYamlAsync(folder!, currentTest);
 
                         currentSchema = rowSchema;
                         currentSp = rowSp;
@@ -88,20 +112,20 @@ namespace qest.Commands
                     }
                 }
 
-                await SafeWriteYamlAsync(folder!, currentTest);
+                await Utils.SafeWriteYamlAsync(folder!, currentTest);
 
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.ToString());
-                Environment.Exit(1);
-                Console.ResetColor();
+                AnsiConsole.WriteException(ex);
+                return 1;
             }
+
+            return 0;
         }
 
         private static Test GenerateNewTest(string schemaName, string spName)
-        {               
+        {
             Test currentTest = new();
             currentTest.Steps = new();
             TestStep currentStep = new();
@@ -117,32 +141,6 @@ namespace qest.Commands
             currentCommand.CommandText = $"[{schemaName}].[{spName}]";
 
             return currentTest;
-        }
-
-        static async Task SafeWriteYamlAsync(DirectoryInfo folder, Test testTemplate)
-        {
-            FileInfo output = new(Path.Combine(folder.Name, $"{testTemplate.Name}.yml"));
-
-            var serializer = new SerializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            try
-            {
-                await using var stream = new StreamWriter(output.FullName, false);
-
-                string yaml = serializer.Serialize(new Test[] {testTemplate});
-                await stream.WriteLineAsync(yamlSchema);
-                await stream.WriteAsync(yaml);
-                
-                Console.WriteLine($"Created template {output.Name}");
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error creating template {output.Name}: {ex.Message}");
-                Console.ResetColor();
-            }
         }
     }
 }
