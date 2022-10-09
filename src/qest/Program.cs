@@ -6,7 +6,7 @@ namespace qest
 {
     internal class Program
     {
-        const string ExampleCs = "\"Server=WHOPR;Initial Catalog=WHOOPR;User id=StevenFalken;Password=JOSHUA\"";
+        const string ExampleCs = "\"Server=WOPR;Initial Catalog=qest;User=StephenFalken;Password=JOSHUA\"";
         static async Task Main(string[] args)
         {
             var app = new CommandApp();

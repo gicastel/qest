@@ -67,10 +67,17 @@ namespace qest.Commands
 
         private List<Test>? TestCollection;
 
+        private List<(string Message, bool? IsError)>? Report;
+
+        private Tree? TestTree;
+
         public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
         {
 
             TestCollection = new();
+            Report = new();
+            TestTree = new Tree("quest");
+
 
              if (settings.File is not null)
             {
@@ -85,16 +92,19 @@ namespace qest.Commands
                     TestCollection.AddRange(Utils.SafeReadYaml(item));
             }
 
-            AnsiConsole.MarkupLine($"[green]{TestCollection.Count} tests loaded.[/]");
+            AnsiConsole.MarkupLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} [green]{TestCollection.Count} tests loaded.[/]");
             
             var sqlConnection = new SqlConnection(settings.ConnectionString);
 
+
             foreach (var test in TestCollection)
             {
-                test.Connection = sqlConnection;
-                bool pass = test.Run();
-                if (!pass)
-                    return 1;
+                AnsiConsole.Live(TestTree)
+                .Start(ctx =>
+                {
+                    test.Connection = sqlConnection;
+                    bool pass = test.Run(TestTree);
+                });
             }
 
             return 0;

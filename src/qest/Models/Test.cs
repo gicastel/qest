@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using Spectre.Console;
 using YamlDotNet.Serialization;
 
 namespace qest.Models
@@ -17,10 +18,14 @@ namespace qest.Models
         public Scripts? After { get; set; }
         public Dictionary<string, object>? Variables { get; set; }
         private List<(string Message, bool? IsError)>? Report { get; set; }
+        [YamlIgnore]
+        private TreeNode testNode;
 
-        public bool Run()
+        public bool Run(Tree tree)
         {
             Report = new();
+
+            testNode = tree.AddNode(this.Name);
 
             ReportAdd($"-----------------------------------------------------------------------------------");
             ReportAdd($"Running Test: {this.Name}");
@@ -59,6 +64,9 @@ namespace qest.Models
             }
 
             var isPass = !Report.Where(m => m.IsError.HasValue && m.IsError.Value).Any();
+
+            if (isPass)
+                testNode.Collapse();
 
             ReportAdd($"Test {Name}: {(isPass ? "OK" : "KO")}", !isPass);
 
@@ -235,14 +243,21 @@ namespace qest.Models
 
         internal void ReportAdd(string message, bool? isError = null)
         {
-            message = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") + " " + message;
+            string pfx = $"[grey]{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}[/]";
             Report.Add((message, isError));
 
-            if (isError.HasValue)
-                Console.ForegroundColor = isError.Value ? ConsoleColor.Red : ConsoleColor.Green;
+            message = message.EscapeMarkup();
 
-            Console.WriteLine(message);
-            Console.ForegroundColor = ConsoleColor.White;
+            if (isError.HasValue)
+            {
+                if (isError.Value)
+                    testNode.AddNode($"{pfx} [red]{message}[/]");
+                else
+                    testNode.AddNode($"{pfx} [green]{message}[/]");
+            }
+            else
+                testNode.AddNode($"{pfx} {message}");
+
         }
 
         public static SqlDbType MapType(string type) => Utils.MapSqlType(type);
