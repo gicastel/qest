@@ -5,13 +5,14 @@ using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using qest.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 namespace qest.Commands
 {
 
-    internal sealed class RunCommand : Command<RunCommand.Settings>
+    internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
     {
         public sealed class Settings : CommandSettings
         {
@@ -65,23 +66,16 @@ namespace qest.Commands
 
         }
 
-        private List<Test>? TestCollection;
+        private SqlConnection? TargetSqlConnection;
 
-        private List<(string Message, bool? IsError)>? Report;
-
-        private Tree? TestTree;
-
-        public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
+        public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] Settings settings)
         {
 
-            TestCollection = new();
-            Report = new();
-            TestTree = new Tree("quest");
+            List<Test> TestCollection = new();
 
-
-             if (settings.File is not null)
+            if (settings.File is not null)
             {
-                    FileInfo fileToLoad = new FileInfo(settings.File);
+                FileInfo fileToLoad = new FileInfo(settings.File);
 
                 TestCollection.AddRange(Utils.SafeReadYaml(fileToLoad));
             }
@@ -92,22 +86,26 @@ namespace qest.Commands
                     TestCollection.AddRange(Utils.SafeReadYaml(item));
             }
 
-            AnsiConsole.MarkupLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} [green]{TestCollection.Count} tests loaded.[/]");
-            
-            var sqlConnection = new SqlConnection(settings.ConnectionString);
+            AnsiConsole.MarkupLine($"[grey]{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}[/] {TestCollection.Count} tests loaded.");
 
+            TargetSqlConnection = new SqlConnection(settings.ConnectionString);
+
+            int exitCode = 0;
 
             foreach (var test in TestCollection)
             {
-                AnsiConsole.Live(TestTree)
-                .Start(ctx =>
+
+                test.Connection = TargetSqlConnection;
+                bool pass = await test.RunAsync();
+
+                if (!pass)
                 {
-                    test.Connection = sqlConnection;
-                    bool pass = test.Run(TestTree);
-                });
+                    exitCode = 1;
+                    break;
+                }
             }
 
-            return 0;
+            return exitCode;
         }
     }
 }

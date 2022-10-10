@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Threading.Tasks;
 using Spectre.Console;
 using YamlDotNet.Serialization;
 
@@ -17,36 +18,31 @@ namespace qest.Models
         public List<TestStep> Steps { get; set; }
         public Scripts? After { get; set; }
         public Dictionary<string, object>? Variables { get; set; }
-        private List<(string Message, bool? IsError)>? Report { get; set; }
         [YamlIgnore]
-        private TreeNode testNode;
+        private bool Pass;
 
-        public bool Run(Tree tree)
+        public async Task<bool> RunAsync()
         {
-            Report = new();
-
-            testNode = tree.AddNode(this.Name);
-
-            ReportAdd($"-----------------------------------------------------------------------------------");
-            ReportAdd($"Running Test: {this.Name}");
+            Logger($"Running Test: {this.Name}", customStyle: "bold,blue");
+            Pass = true;
 
             if (Connection == null)
             {
-                ReportAdd($"FATAL: SQL Connection null", true);
+                Logger($"FATAL: SQL Connection null", true, "bold");
                 return false;
             }
 
             if (Steps == null)
             {
-                ReportAdd($"FATAL: TestCases null", true);
+                Logger($"FATAL: TestCases null", true, "bold");
                 return false;
             }
 
             try
             {
-                Connection.Open();
+                await Connection.OpenAsync();
 
-                Before?.Run(this, "Before");
+                await Before?.RunAsync(this, "Before");
 
                 foreach (var testCase in Steps)
                 {
@@ -55,27 +51,22 @@ namespace qest.Models
             }
             catch (Exception ex)
             {
-                ReportAdd($"FATAL: {ex}", true);
+                Logger($"FATAL: {ex}", true);
             }
             finally
             {
-                After?.Run(this, "After");
-                Connection.Close();
+                await After?.RunAsync(this, "After");
+                await Connection.CloseAsync();
             }
 
-            var isPass = !Report.Where(m => m.IsError.HasValue && m.IsError.Value).Any();
+            Logger($"Test {Name}: {(Pass ? "OK" : "KO")}", !Pass, "bold");
 
-            if (isPass)
-                testNode.Collapse();
-
-            ReportAdd($"Test {Name}: {(isPass ? "OK" : "KO")}", !isPass);
-
-            return isPass;
+            return Pass;
         }
 
         private void RunTestStep(Test parentTest, TestStep step)
         {
-            ReportAdd($"Running Test {parentTest.Name} - Step: {step.Name}");
+            Logger($"Running Test {parentTest.Name} - Step: {step.Name}", customStyle: "blue");
             SqlCommand testCmd = new(step.Command.CommandText, Connection);
             testCmd.CommandType = CommandType.StoredProcedure;
 
@@ -121,6 +112,7 @@ namespace qest.Models
 
                     foreach (var resultSet in resultSets)
                     {
+                        Logger($"Loading ResultSet: {resultSet.Name}");
                         DataTable dataTable = resultSet.GetDataTable();
 
                         while (reader.Read())
@@ -145,12 +137,12 @@ namespace qest.Models
 
                     foreach (var expected in step.Results.ResultSets)
                     {
-                        ReportAdd($"Checking ResultSet: {expected.Name}");
+                        Logger($"Checking ResultSet: {expected.Name}");
                         var currRes = dataTables.Where(d => d.TableName == expected.Name).FirstOrDefault();
 
                         if (currRes == null)
                         {
-                            ReportAdd($"Resultset {expected.Name} not found", true);
+                            Logger($"Resultset {expected.Name} not found", true);
                             continue;
                         }
 
@@ -158,12 +150,12 @@ namespace qest.Models
                         {
                             if (expected.RowNumber != currRes.Rows.Count)
                             {
-                                ReportAdd($"ResultSet {expected.Name} row number: {currRes.Rows.Count} != {expected.RowNumber}", true);
+                                Logger($"ResultSet {expected.Name} row number: {currRes.Rows.Count} != {expected.RowNumber}", true);
                                 continue;
                             }
                         }
 
-                        ReportAdd($"Result {expected.Name}: OK", false);
+                        Logger($"Result {expected.Name}: OK", false);
                     }
                 }
 
@@ -174,11 +166,11 @@ namespace qest.Models
                 {
                     foreach (var expected in step.Results.OutputParameters)
                     {
-                        ReportAdd($"Checking Output Parameter: {expected.Name}");
+                        Logger($"Checking Output Parameter: {expected.Name}");
                         var currRes = outPars.Where(p => p.ParameterName == $"@{expected.Name}").FirstOrDefault();
                         if (currRes == null)
                         {
-                            ReportAdd($"Output Parameter {expected.Name} not found", true);
+                            Logger($"Output Parameter {expected.Name} not found", true);
                             continue;
                         }
 
@@ -186,12 +178,12 @@ namespace qest.Models
                         {
                             if (!currRes.Value.Equals(currRes.Value))
                             {
-                                ReportAdd($"Ouput Parameter {expected.Name}: {currRes.Value} != {expected.Value}", true);
+                                Logger($"Ouput Parameter {expected.Name}: {currRes.Value} != {expected.Value}", true);
                                 continue;
                             }
                         }
 
-                        ReportAdd($"Result {expected.Name}: {expected.Value} == {currRes.Value}", false);
+                        Logger($"Result {expected.Name}: {expected.Value} == {currRes.Value}", false);
                     }
                 }
 
@@ -199,18 +191,18 @@ namespace qest.Models
                 if (step.Results.ReturnCode.HasValue)
                 {
                     var expected = step.Results.ReturnCode.Value;
-                    ReportAdd($"Checking Return Code");
+                    Logger($"Checking Return Code");
                     var rcPar = outPars.Where(p => p.ParameterName == $"@rc").FirstOrDefault();
                     if (rcPar == null)
                     {
-                        ReportAdd($"Return Code not found", true);
+                        Logger($"Return Code not found", true);
                     }
                     else
                     {
                         if (expected != Convert.ToInt32(rcPar.Value))
-                            ReportAdd($"Return Code: {rcPar.Value} != {expected}", true);
+                            Logger($"Return Code: {rcPar.Value} != {expected}", true);
                         else
-                            ReportAdd($"Return Code: {expected} == {expected}", false);
+                            Logger($"Return Code: {expected} == {expected}", false);
                     }
                 }
             }
@@ -218,6 +210,7 @@ namespace qest.Models
             // asserts
             if (step.Asserts != null)
             {
+                Logger($"Checking Asserts");
                 foreach (var assert in step.Asserts)
                 {
                     var assertSqlQuery = assert.SqlQuery.ReplaceVars(Variables);
@@ -231,35 +224,38 @@ namespace qest.Models
                         pass = Convert.ChangeType(assertScalarValue, scalarType).Equals(Convert.ChangeType(result, scalarType));
 
                         if (pass)
-                            ReportAdd($"Assert {assertSqlQuery}: {result} == {assertScalarValue}", false);
+                            Logger($"{assertSqlQuery}: {result} == {assertScalarValue}", false);
                         else
-                            ReportAdd($"Assert {assertSqlQuery}: {result} != {assertScalarValue}", true);
+                            Logger($"{assertSqlQuery}: {result} != {assertScalarValue}", true);
                     }
                     else
-                        ReportAdd($"Assert {assertSqlQuery}: Result NULL", true);
+                        Logger($"{assertSqlQuery}: Result NULL", true);
                 }
             }
         }
 
-        internal void ReportAdd(string message, bool? isError = null)
+        internal void Logger(string message, bool? isError = null, string? customStyle = null)
         {
             string pfx = $"[grey]{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}[/]";
-            Report.Add((message, isError));
 
             message = message.EscapeMarkup();
 
+            if (customStyle is not null)
+                foreach (string style in customStyle.Split(','))
+                    message = $"[{style}]{message}[/]";
+
             if (isError.HasValue)
             {
+                Pass = (Pass && !isError.Value);
                 if (isError.Value)
-                    testNode.AddNode($"{pfx} [red]{message}[/]");
+                    message = $"{pfx} [red]{message}[/]";
                 else
-                    testNode.AddNode($"{pfx} [green]{message}[/]");
+                    message = $"{pfx} [green]{message}[/]";
             }
             else
-                testNode.AddNode($"{pfx} {message}");
+                message = $"{pfx} {message}";
 
+            AnsiConsole.MarkupLine(message);
         }
-
-        public static SqlDbType MapType(string type) => Utils.MapSqlType(type);
     }
 }

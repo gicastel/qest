@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace qest.Models
 {
     public class Scripts : List<Script>
     {
-        public void Run(Test parentTest, string scopeName)
+        public async Task RunAsync(Test parentTest, string scopeName)
         {
-            var loadData = parentTest.Connection.BeginTransaction();
+            var transaction = parentTest.Connection!.BeginTransaction();
+            parentTest.Logger($"Running {scopeName} scripts...", null);
             try
             {
                 foreach (var item in this)
@@ -15,19 +17,18 @@ namespace qest.Models
                     string script = item.Compact(parentTest.Variables);
                     if (script.Length > 0)
                     {
-                        parentTest.ReportAdd($"Running {scopeName} scripts...");
-                        var cmd = new SqlCommand(script, parentTest.Connection, loadData);
-                        cmd.ExecuteNonQuery();
-                        parentTest.ReportAdd("Completed.", false);
+                        var cmd = new SqlCommand(script, parentTest.Connection, transaction);
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
-                loadData.Commit();
+                await transaction.CommitAsync();
             }
             catch
             {
-                loadData.Rollback();
+                await transaction.RollbackAsync();
                 throw;
             }
+            parentTest.Logger("Completed.", false);            
         }
     }
 

@@ -102,7 +102,7 @@ namespace qest.Commands
                         var outputPar = new OutputParameter();
                         outputPar.Name = parameterName[1..];
                         outputPar.Value = "?";
-                        outputPar.Type = Test.MapType(parameterType);
+                        outputPar.Type = Utils.MapSqlType(parameterType);
 
                         currentStep.Results.OutputParameters.Add(outputPar);
                     }
