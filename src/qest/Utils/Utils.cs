@@ -98,6 +98,27 @@ namespace qest
             }
             return list;
         }
+
+        internal static async Task<List<Test>> SafeReadYamlAsync(FileInfo file)
+        {
+            List<Test> list = new List<Test>();
+
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+
+            try
+            {
+                using var stream = new StreamReader(file.FullName);
+                string yaml = await stream.ReadToEndAsync();
+                list.AddRange(deserializer.Deserialize<List<Test>>(yaml));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deserializing {file.FullName}: {ex.Message}");
+            }
+            return list;
+        }
         
         internal const string ConnectionStringBarebone = "Server=;Initial Catalog=;User=;Password=;";
 

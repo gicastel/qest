@@ -77,13 +77,13 @@ namespace qest.Commands
             {
                 FileInfo fileToLoad = new FileInfo(settings.File);
 
-                TestCollection.AddRange(Utils.SafeReadYaml(fileToLoad));
+                TestCollection.AddRange(await Utils.SafeReadYamlAsync(fileToLoad));
             }
             else if (settings.Folder is not null)
             {
                 DirectoryInfo folderToLoad = new DirectoryInfo(settings.Folder);
                 foreach (var item in folderToLoad.EnumerateFiles().Where(f => f.Extension == ".yml" || f.Extension == ".yaml"))
-                    TestCollection.AddRange(Utils.SafeReadYaml(item));
+                    TestCollection.AddRange(await Utils.SafeReadYamlAsync(item));
             }
 
             AnsiConsole.MarkupLine($"[grey]{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}[/] {TestCollection.Count} tests loaded.");
