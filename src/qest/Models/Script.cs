@@ -44,4 +44,9 @@ namespace qest.Models
         Inline,
         File
     }
+
+    public class Scripts : List<Script>
+    {
+        
+    }
 }

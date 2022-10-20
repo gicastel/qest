@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
@@ -7,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using qest.Models;
+using qest.Runners;
 using Spectre.Console;
 using Spectre.Console.Cli;
 namespace qest.Commands
@@ -86,24 +86,33 @@ namespace qest.Commands
                     TestCollection.AddRange(await Utils.SafeReadYamlAsync(item));
             }
 
-            AnsiConsole.MarkupLine($"[grey]{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}[/] {TestCollection.Count} tests loaded.");
+            var root = new Tree($"{TestCollection.Count} tests loaded");
 
             TargetSqlConnection = new SqlConnection(settings.ConnectionString);
 
             int exitCode = 0;
 
-            foreach (var test in TestCollection)
-            {
-
-                test.Connection = TargetSqlConnection;
-                bool pass = await test.RunAsync();
-
-                if (!pass)
+            await AnsiConsole.Live(root)
+                .StartAsync(async ctx => 
                 {
-                    exitCode = 1;
-                    break;
-                }
-            }
+                    foreach (var test in TestCollection)
+                    {
+                        var testNode = root.AddNode($"{test.Name}".EscapeAndAddStyles("bold,blue"));
+
+                        var runner = new TreeRunner(test, TargetSqlConnection, testNode);
+                        ctx.Refresh();
+
+                        bool pass = await runner.RunAsync();
+                        ctx.Refresh();
+
+                        if (!pass)
+                        {
+                            exitCode = 1;
+                            break;
+                        }
+                    }
+                });
+
 
             return exitCode;
         }
