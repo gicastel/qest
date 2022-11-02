@@ -113,7 +113,6 @@ namespace qest.Commands
                 }
 
                 await Utils.SafeWriteYamlAsync(folder!, currentTest);
-
             }
             catch (Exception ex)
             {
