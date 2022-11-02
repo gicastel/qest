@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using qest.Models;
+using Spectre.Console;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -10,27 +11,7 @@ namespace qest
 {
     internal static partial class Utils
     {
-        internal static List<Test> SafeReadYaml(FileInfo file)
-        {
-            List<Test> list = new List<Test>();
-
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            try
-            {
-                using var stream = new StreamReader(file.FullName);
-                string yaml = stream.ReadToEnd();
-                list.AddRange(deserializer.Deserialize<List<Test>>(yaml));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deserializing {file.FullName}: {ex.Message}");
-            }
-            return list;
-        }
-
+        internal static List<Test> SafeReadYaml(FileInfo file) => SafeReadYamlAsync(file).GetAwaiter().GetResult();
         internal static async Task<List<Test>> SafeReadYamlAsync(FileInfo file)
         {
             List<Test> list = new List<Test>();
@@ -47,11 +28,12 @@ namespace qest
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deserializing {file.FullName}: {ex.Message}");
+                AnsiConsole.MarkupLineInterpolated($"[bold red]Error deserializing {file.FullName}[/]");
+                AnsiConsole.WriteException(ex);
             }
             return list;
         }
-                
+
         internal static async Task SafeWriteYamlAsync(DirectoryInfo folder, Test testTemplate)
         {
             FileInfo output = new(Path.Combine(folder.Name, $"{testTemplate.Name}.yml"));
@@ -64,17 +46,15 @@ namespace qest
             {
                 await using var stream = new StreamWriter(output.FullName, false);
 
-                string yaml = serializer.Serialize(new Test[] {testTemplate});
+                string yaml = serializer.Serialize(new Test[] { testTemplate });
                 await stream.WriteLineAsync(yamlSchema);
                 await stream.WriteAsync(yaml);
-                
-                Console.WriteLine($"Created template {output.Name}");
+                AnsiConsole.MarkupLine($"Created Template: {folder.Name}/{testTemplate.Name.EscapeAndAddStyles("blue")}");
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error creating template {output.Name}: {ex.Message}");
-                Console.ResetColor();
+                AnsiConsole.MarkupLineInterpolated($"[bold red]Error serializing {output.FullName}[/]");
+                AnsiConsole.WriteException(ex);
             }
         }
     }
