@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using qest.Models;
-using qest.Runners;
+using qest.Connectors;
+using qest.Visualizers;
 using Spectre.Console;
 using Spectre.Console.Cli;
 namespace qest.Commands
@@ -66,8 +66,6 @@ namespace qest.Commands
 
         }
 
-        private SqlConnection? TargetSqlConnection;
-
         public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] Settings settings)
         {
 
@@ -85,35 +83,11 @@ namespace qest.Commands
                 foreach (var item in folderToLoad.EnumerateFiles().Where(f => f.Extension == ".yml" || f.Extension == ".yaml"))
                     TestCollection.AddRange(await Utils.SafeReadYamlAsync(item));
             }
+          
+            IVisualizer visualizer;
+            visualizer = new ConsoleVisualizer<MsSqlConnector>(TestCollection, settings.ConnectionString);
 
-            var root = new Tree($"{TestCollection.Count} tests loaded");
-
-            TargetSqlConnection = new SqlConnection(settings.ConnectionString);
-
-            int exitCode = 0;
-
-            await AnsiConsole.Live(root)
-                .StartAsync(async ctx => 
-                {
-                    foreach (var test in TestCollection)
-                    {
-                        var testNode = root.AddNode($"{test.Name}".EscapeAndAddStyles("bold,blue"));
-
-                        var runner = new TreeRunner(test, TargetSqlConnection, testNode);
-                        ctx.Refresh();
-
-                        bool pass = await runner.RunAsync();
-                        ctx.Refresh();
-
-                        if (!pass)
-                        {
-                            exitCode = 1;
-                            break;
-                        }
-                    }
-                });
-
-
+            int exitCode = await visualizer.RunAllAsync();
             return exitCode;
         }
     }

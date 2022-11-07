@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using qest.Models;
+using qest.Connectors;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -102,7 +103,7 @@ namespace qest.Commands
                         var outputPar = new OutputParameter();
                         outputPar.Name = parameterName[1..];
                         outputPar.Value = "?";
-                        outputPar.Type = Utils.MapSqlType(parameterType);
+                        outputPar.Type = MsSqlConnector.MapStringToQestType(parameterType);
 
                         currentStep.Results.OutputParameters.Add(outputPar);
                     }
