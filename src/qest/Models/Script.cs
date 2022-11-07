@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using YamlDotNet.Serialization;
 
 namespace qest.Models
 {
@@ -47,6 +48,9 @@ namespace qest.Models
 
     public class Scripts : List<Script>
     {
-        
+        [YamlIgnore]
+        public bool Result => ResultException is null;
+        [YamlIgnore]
+        public Exception? ResultException { get; set; }
     }
 }

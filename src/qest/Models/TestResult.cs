@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using YamlDotNet.Serialization;
 
 namespace qest.Models
 {
@@ -9,6 +11,11 @@ namespace qest.Models
         public List<ResultSet>? ResultSets { get; set; }
         public List<OutputParameter>? OutputParameters { get; set; }
         public int? ReturnCode { get; set; }
+
+        [YamlIgnore]
+        public int? ReturnCodeResult { get; set; }
+        [YamlIgnore]
+        public Exception? ReturnCodeResultException { get; set; }
     }
 
     public class ResultSet
@@ -17,26 +24,35 @@ namespace qest.Models
         public List<Column> Columns { get; set; }
         public int? RowNumber { get; set; }
 
-        public DataTable GetDataTable()
+        [YamlIgnore]
+        public DataTable? Result { get; set; }
+        [YamlIgnore]
+        public Exception? ResultException { get; set; }
+
+        public void CreateDataTable()
         {
-            DataTable dt = new(Name);
+            Result = new(Name);
             foreach (var col in Columns)
-                dt.Columns.Add(new DataColumn(col.Name, Utils.MapType(col.Type)));
-            return dt;
+                Result.Columns.Add(new DataColumn(col.Name, Utils.MapQestTypeToInternal(col.Type)));
         }
     }
 
     public class OutputParameter
     {
         public string Name { get; set; }
-        public SqlDbType Type { get; set; }
+        public qestType Type { get; set; }
         public object Value { get; set; }
+
+        [YamlIgnore]
+        public object? Result { get; set; }
+        [YamlIgnore]
+        public Exception? ResultException { get; set; }
     }
 
     public class Column
     {
         public string Name { get; set;}
-        public SqlDbType Type { get; set; }
+        public qestType Type { get; set; }
     }
 
 }

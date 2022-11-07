@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using YamlDotNet.Serialization;
 
 namespace qest.Models
 {
@@ -9,5 +11,8 @@ namespace qest.Models
         public List<TestStep> Steps { get; set; }
         public Scripts? After { get; set; }
         public Dictionary<string, object>? Variables { get; set; }
+
+        [YamlIgnore]
+        public Exception? ResultException { get; set; }
     }
 }
