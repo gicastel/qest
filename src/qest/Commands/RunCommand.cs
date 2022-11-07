@@ -28,6 +28,14 @@ namespace qest.Commands
             [CommandOption("-c|--tcs <TARGETCONNECTIONSTRING>")]
             public string ConnectionString { get; init; }
 
+            private List<string> AllowedOutput = new List<string>(){"console", "tree"};
+            
+            [Description($"Output format: console / tree")]
+            [CommandOption("-o|--output <OUTPUTFORMAT>")]
+            [DefaultValue("console")]
+            public string OutputFormat { get; init; }
+
+
             public override ValidationResult Validate()
             {
                 if (Folder is null && File is null)
@@ -61,6 +69,9 @@ namespace qest.Commands
 
                 var result = Validators.ValidateConnectionString(ConnectionString);
 
+                if (!AllowedOutput.Contains(OutputFormat))
+                    return ValidationResult.Error($"Output format could be: {string.Join(", ", AllowedOutput)}");
+
                 return result;
             }
 
@@ -85,7 +96,11 @@ namespace qest.Commands
             }
           
             IVisualizer visualizer;
-            visualizer = new ConsoleVisualizer<MsSqlConnector>(TestCollection, settings.ConnectionString);
+            if (settings.OutputFormat == "tree")
+                visualizer = new TreeVisualizer<MsSqlConnector>(TestCollection, settings.ConnectionString);
+            else
+                visualizer = new ConsoleVisualizer<MsSqlConnector>(TestCollection, settings.ConnectionString);
+
 
             int exitCode = await visualizer.RunAllAsync();
             return exitCode;
