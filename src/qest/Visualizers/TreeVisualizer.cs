@@ -14,7 +14,10 @@ namespace qest.Visualizers
         private TreeNode MainNode;
         private bool Pass;
 
-        private const string objectStyle = "blue";
+        private const string objectStyle_l1 = "blue";
+        private const string objectStyle_l2 = "cornflowerblue";
+        private const string objectStyle_l3 = "steelblue1";
+
         private const string errorStyle = "bold red";
         private const string okStyle = "green";
 
@@ -37,7 +40,7 @@ namespace qest.Visualizers
 
             foreach (var currentTest in TestCollection)
             {
-                var testNode = root.AddNode($"{currentTest.Name}".EscapeAndAddStyles($"bold {objectStyle}"));
+                var testNode = root.AddNode($"{currentTest.Name}".EscapeAndAddStyles($"bold {objectStyle_l1}"));
 
                 MainNode = testNode;
                 Test = currentTest;
@@ -74,7 +77,7 @@ namespace qest.Visualizers
 
             foreach (var testCase in Test.Steps)
             {
-                var testCaseNode = MainNode.AddNode($"Step: {testCase.Name.EscapeAndAddStyles(objectStyle)}");
+                var testCaseNode = MainNode.AddNode($"Step: {testCase.Name.EscapeAndAddStyles(objectStyle_l2)}");
                 EvaluateTestStep(testCase, Test.Variables, testCaseNode);
             }
 
@@ -111,7 +114,7 @@ namespace qest.Visualizers
 
                     foreach (var expectedResult in step.Results.ResultSets)
                     {
-                        var currentResultNode = resultSetsNode.AddNode(expectedResult.Name.EscapeAndAddStyles(objectStyle));
+                        var currentResultNode = resultSetsNode.AddNode(expectedResult.Name.EscapeAndAddStyles(objectStyle_l3));
 
                         var currentResult = expectedResult.Result;
 
@@ -150,7 +153,7 @@ namespace qest.Visualizers
                     foreach (var expectedResult in step.Results.OutputParameters)
                     {
                         var currentResult = expectedResult.Result;
-                        var currentResultNode = outputParametersNode.AddNode($"{expectedResult.Name}".EscapeAndAddStyles(objectStyle));
+                        var currentResultNode = outputParametersNode.AddNode($"{expectedResult.Name}".EscapeAndAddStyles(objectStyle_l3));
 
                         if (currentResult is null)
                         {
@@ -177,7 +180,7 @@ namespace qest.Visualizers
                 //returncode
                 if (step.Results.ReturnCode.HasValue)
                 {
-                    var rcNode = testCaseNode.AddNode("Return Code".EscapeAndAddStyles(objectStyle));
+                    var rcNode = testCaseNode.AddNode("Return Code".EscapeAndAddStyles(objectStyle_l3));
                     var expectedResult = step.Results.ReturnCode.Value;
                     var currentResult = step.Results.ReturnCodeResult;
 
@@ -217,7 +220,7 @@ namespace qest.Visualizers
                     var assertSqlQuery = assert.SqlQuery.ReplaceVars(Test.Variables);
                     var assertScalarValue = assert.ScalarValue.ReplaceVarsInParameter(Test.Variables);
                     var currentResult = assert.Result;
-                    var currentResultNode = assertsNode.AddNode(assertSqlQuery.EscapeAndAddStyles(objectStyle));
+                    var currentResultNode = assertsNode.AddNode(assertSqlQuery.EscapeAndAddStyles(objectStyle_l3));
 
                     if (assert.ResultException is not null)
                     {
@@ -251,7 +254,7 @@ namespace qest.Visualizers
 
         private void EvaluateScript(string scope, Scripts scripts, TreeNode root)
         {
-            string objName = scope.EscapeAndAddStyles(objectStyle);
+            string objName = scope.EscapeAndAddStyles(objectStyle_l2);
             var scriptsNode = root.AddNode($"Scripts: {objName}");
 
             if (scripts.Result)

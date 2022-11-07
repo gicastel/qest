@@ -13,7 +13,10 @@ namespace qest.Visualizers
         private Test Test;
         private bool Pass;
 
-        private const string objectStyle = "blue";
+        private const string objectStyle_l1 = "blue";
+        private const string objectStyle_l2 = "cornflowerblue";
+        private const string objectStyle_l3 = "steelblue1";
+
         private const string errorStyle = "bold red";
         private const string okStyle = "green";
 
@@ -42,7 +45,7 @@ namespace qest.Visualizers
 
             foreach (var currentTest in TestCollection)
             {
-                LogHierarchy.Add($"{currentTest.Name}".EscapeAndAddStyles($"bold {objectStyle}"));
+                LogHierarchy.Add($"{currentTest.Name}".EscapeAndAddStyles($"bold {objectStyle_l1}"));
 
                 Test = currentTest;
 
@@ -78,7 +81,7 @@ namespace qest.Visualizers
 
             foreach (var testCase in Test.Steps)
             {
-                LogHierarchy.Add($"{testCase.Name.EscapeAndAddStyles(objectStyle)}");
+                LogHierarchy.Add($"{testCase.Name.EscapeAndAddStyles(objectStyle_l2)}");
                 EvaluateTestStep(testCase, Test.Variables);
                 LogHierarchy.RemoveLast();
             }
@@ -117,7 +120,7 @@ namespace qest.Visualizers
 
                     foreach (var expectedResult in step.Results.ResultSets)
                     {
-                        LogHierarchy.Add(expectedResult.Name.EscapeAndAddStyles(objectStyle));
+                        LogHierarchy.Add(expectedResult.Name.EscapeAndAddStyles(objectStyle_l3));
 
                         var currentResult = expectedResult.Result;
 
@@ -160,7 +163,7 @@ namespace qest.Visualizers
                     foreach (var expectedResult in step.Results.OutputParameters)
                     {
                         var currentResult = expectedResult.Result;
-                        LogHierarchy.Add($"{expectedResult.Name}".EscapeAndAddStyles(objectStyle));
+                        LogHierarchy.Add($"{expectedResult.Name}".EscapeAndAddStyles(objectStyle_l3));
 
                         if (currentResult is null)
                         {
@@ -192,7 +195,7 @@ namespace qest.Visualizers
                 //returncode
                 if (step.Results.ReturnCode.HasValue)
                 {
-                    LogHierarchy.Add("Return Code".EscapeAndAddStyles(objectStyle));
+                    LogHierarchy.Add("Return Code".EscapeAndAddStyles(objectStyle_l3));
                     var expectedResult = step.Results.ReturnCode.Value;
                     var currentResult = step.Results.ReturnCodeResult;
 
@@ -233,7 +236,7 @@ namespace qest.Visualizers
                     var assertSqlQuery = assert.SqlQuery.ReplaceVars(Test.Variables);
                     var assertScalarValue = assert.ScalarValue.ReplaceVarsInParameter(Test.Variables);
                     var currentResult = assert.Result;
-                    LogHierarchy.Add(assertSqlQuery.EscapeAndAddStyles(objectStyle));
+                    LogHierarchy.Add(assertSqlQuery.EscapeAndAddStyles(objectStyle_l3));
 
                     if (assert.ResultException is not null)
                     {
@@ -270,7 +273,7 @@ namespace qest.Visualizers
 
         private void EvaluateScript(string scope, Scripts scripts)
         {
-            string objName = scope.EscapeAndAddStyles(objectStyle);
+            string objName = scope.EscapeAndAddStyles(objectStyle_l2);
             LogHierarchy.Add(objName);
 
             if (scripts.Result)
