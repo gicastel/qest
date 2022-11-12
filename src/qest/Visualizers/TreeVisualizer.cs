@@ -9,10 +9,9 @@ namespace qest.Visualizers
     public class TreeVisualizer<T> : IVisualizer where T : IConnector, new()
     {
         private List<Test> TestCollection;
-        
         private Test Test;
-        private TreeNode MainNode;
         private bool Pass;
+        private bool Verbose;
 
         private const string objectStyle_l1 = "blue";
         private const string objectStyle_l2 = "cornflowerblue";
@@ -32,22 +31,22 @@ namespace qest.Visualizers
             DbConnector.SetConnectionString(connectionString);
         }
 
-        public async Task<int> RunAllAsync()
+        public async Task<int> RunAllAsync(bool verbose)
         {
+            Verbose = verbose;
             int exitCode = 0;
 
             var root = new Tree($"{TestCollection.Count} tests loaded");
 
             foreach (var currentTest in TestCollection)
             {
-                var testNode = root.AddNode($"{currentTest.Name}".EscapeAndAddStyles($"bold {objectStyle_l1}"));
+                var testNode = new TreeNode(new Markup($"{currentTest.Name}".EscapeAndAddStyles($"bold {objectStyle_l1}")));
 
-                MainNode = testNode;
                 Test = currentTest;
 
-                bool pass = await RunSingleTestAsync();
+                await RunSingleTestAsync(testNode);
 
-                if (!pass)
+                if (!Pass)
                 {
                     exitCode = 1;
                     break;
@@ -59,39 +58,39 @@ namespace qest.Visualizers
             return exitCode;
         }
 
-        private async Task<bool> RunSingleTestAsync()
+        private async Task RunSingleTestAsync(TreeNode testNode)
         {
             await DbConnector.LoadData(Test);
             Pass = true;
 
             if (Test.ResultException is not null)
             {
-                AddExceptionNode(MainNode, Test.ResultException);
-                return false;
+                AddExceptionNode(testNode, Test.ResultException);
+                Pass = false;
+                return;
             }
 
             if (Test.Before is not null)
             {
-                EvaluateScript("Before", Test.Before, MainNode);
+                EvaluateScript("Before", Test.Before, testNode);
             }
 
             foreach (var testCase in Test.Steps)
             {
-                var testCaseNode = MainNode.AddNode($"Step: {testCase.Name.EscapeAndAddStyles(objectStyle_l2)}");
+                var testCaseNode = new TreeNode(new Markup($"Step: {testCase.Name.EscapeAndAddStyles(objectStyle_l2)}"));
                 EvaluateTestStep(testCase, Test.Variables, testCaseNode);
+
             }
 
             if (Test.After is not null)
             {
-                EvaluateScript("After", Test.After, MainNode);
+                EvaluateScript("After", Test.After, testNode);
             }
 
             if (Pass)
-                MainNode.AddNode($"{Test.Name}: OK".EscapeAndAddStyles($"bold {okStyle}"));
+                testNode.AddNode($"{Test.Name}: OK".EscapeAndAddStyles($"bold {okStyle}"));
             else
-                MainNode.AddNode($"{Test.Name}: KO!".EscapeAndAddStyles(errorStyle));
-
-            return Pass;
+                testNode.AddNode($"{Test.Name}: KO!".EscapeAndAddStyles(errorStyle));
         }
 
 
@@ -110,17 +109,18 @@ namespace qest.Visualizers
                 // resultsets
                 if (step.Results.ResultSets != null)
                 {
-                    var resultSetsNode = testCaseNode.AddNode("Result Sets");
+                    var resultSetsNode = NewMarkupTreeNode("Result Sets");
 
                     foreach (var expectedResult in step.Results.ResultSets)
                     {
-                        var currentResultNode = resultSetsNode.AddNode(expectedResult.Name.EscapeAndAddStyles(objectStyle_l3));
+                        var currentResultNode = NewMarkupTreeNode(expectedResult.Name.EscapeAndAddStyles(objectStyle_l3));
 
                         var currentResult = expectedResult.Result;
 
                         if (expectedResult.ResultException is not null)
                         {
                             AddExceptionNode(currentResultNode, expectedResult.ResultException);
+                            AddErrorNode(resultSetsNode, currentResultNode);
                             Pass = false;
                             continue;
                         }
@@ -128,6 +128,7 @@ namespace qest.Visualizers
                         if (currentResult == null)
                         {
                             currentResultNode.AddNode($"Not found".EscapeAndAddStyles(errorStyle));
+                            AddErrorNode(resultSetsNode, currentResultNode);
                             Pass = false;
                             continue;
                         }
@@ -137,23 +138,28 @@ namespace qest.Visualizers
                             if (expectedResult.RowNumber != currentResult.Rows.Count)
                             {
                                 currentResultNode.AddNode($"Rows: {currentResult.Rows.Count} != {expectedResult.RowNumber}".EscapeAndAddStyles(errorStyle));
+                                AddErrorNode(resultSetsNode, currentResultNode);
                                 Pass = false;
                                 continue;
                             }
                         }
 
-                        currentResultNode.AddNode($"OK".EscapeAndAddStyles(okStyle));
+                        AddNode(currentResultNode, NewMarkupTreeNode("OK".EscapeAndAddStyles(okStyle)));
+                        AddNode(resultSetsNode, currentResultNode);
                     }
+
+                    if (resultSetsNode.Nodes.Count > 0)
+                        testCaseNode.AddNode(resultSetsNode);
                 }
 
                 //output parameters
                 if (step.Results.OutputParameters is not null)
                 {
-                    var outputParametersNode = testCaseNode.AddNode("Output Parameters");
+                    var outputParametersNode = NewMarkupTreeNode("Output Parameters");
                     foreach (var expectedResult in step.Results.OutputParameters)
                     {
                         var currentResult = expectedResult.Result;
-                        var currentResultNode = outputParametersNode.AddNode($"{expectedResult.Name}".EscapeAndAddStyles(objectStyle_l3));
+                        var currentResultNode = NewMarkupTreeNode($"{expectedResult.Name}".EscapeAndAddStyles(objectStyle_l3));
 
                         if (currentResult is null)
                         {
@@ -173,7 +179,8 @@ namespace qest.Visualizers
                             }
                         }
 
-                        currentResultNode.AddNode($"{expectedResult.Value} == {currentResult}".EscapeAndAddStyles(okStyle));
+                        AddNode(currentResultNode, NewMarkupTreeNode($"{expectedResult.Value} == {currentResult}".EscapeAndAddStyles(okStyle)));
+                        AddNode(outputParametersNode, currentResultNode);
                     }
                 }
 
@@ -255,13 +262,17 @@ namespace qest.Visualizers
         private void EvaluateScript(string scope, Scripts scripts, TreeNode root)
         {
             string objName = scope.EscapeAndAddStyles(objectStyle_l2);
-            var scriptsNode = root.AddNode($"Scripts: {objName}");
+            var scriptsNode = new TreeNode(new Markup($"Scripts: {objName}"));
 
             if (scripts.Result)
+            {
                 scriptsNode.AddNode("OK".EscapeAndAddStyles(okStyle));
+                AddNode(root, scriptsNode);
+            }
             else
             {
                 scriptsNode.AddNode(scripts.ResultException!.ToString().EscapeAndAddStyles(errorStyle));
+                AddErrorNode(root, scriptsNode);
                 Pass = false;
             }
         }
@@ -271,5 +282,15 @@ namespace qest.Visualizers
             currentNode.AddNode($"Exception".EscapeAndAddStyles(errorStyle));
             currentNode.AddNode(ex.ToString().EscapeAndAddStyles(errorStyle));
         }
+
+        private void AddNode(TreeNode currentNode, TreeNode nodeToAdd, bool forceOutput = false)
+        {
+            if (Verbose || forceOutput)
+                currentNode.AddNode(nodeToAdd);
+        }
+
+        private void AddErrorNode(TreeNode currentNode, TreeNode nodeToAdd) => AddNode(currentNode, nodeToAdd, true);
+
+        private TreeNode NewMarkupTreeNode(string markup) => new TreeNode(new Markup(markup));
     }
 }

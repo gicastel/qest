@@ -4,6 +4,6 @@ namespace qest.Visualizers
 {
     public interface IVisualizer
     {
-        Task<int> RunAllAsync();
+        Task<int> RunAllAsync(bool verbose);
     }
 }
