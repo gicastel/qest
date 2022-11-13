@@ -41,13 +41,5 @@ namespace qest
 
             return message;
         }
-
-        internal static void RemoveLast<T>(this List<T> list)
-        {
-            if (list.Count > 0)
-                list.RemoveAt(list.Count-1);
-            else
-                throw new System.NotSupportedException();
-        }
     }
 }

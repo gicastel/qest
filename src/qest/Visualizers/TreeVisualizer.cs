@@ -46,6 +46,8 @@ namespace qest.Visualizers
 
                 await RunSingleTestAsync(testNode);
 
+                root.AddNode(testNode);
+
                 if (!Pass)
                 {
                     exitCode = 1;
@@ -65,7 +67,7 @@ namespace qest.Visualizers
 
             if (Test.ResultException is not null)
             {
-                AddExceptionNode(testNode, Test.ResultException);
+                testNode.AddExceptionNode(Test.ResultException);
                 Pass = false;
                 return;
             }
@@ -80,6 +82,8 @@ namespace qest.Visualizers
                 var testCaseNode = new TreeNode(new Markup($"Step: {testCase.Name.EscapeAndAddStyles(objectStyle_l2)}"));
                 EvaluateTestStep(testCase, Test.Variables, testCaseNode);
 
+                if (testCaseNode.Nodes.Count > 0)
+                    testNode.AddNode(testCaseNode);
             }
 
             if (Test.After is not null)
@@ -88,9 +92,10 @@ namespace qest.Visualizers
             }
 
             if (Pass)
-                testNode.AddNode($"{Test.Name}: OK".EscapeAndAddStyles($"bold {okStyle}"));
+                testNode.AddNode("OK".EscapeAndAddStyles($"bold {okStyle}"));
             else
-                testNode.AddNode($"{Test.Name}: KO!".EscapeAndAddStyles(errorStyle));
+                testNode.AddNode("KO!".EscapeAndAddStyles(errorStyle));
+            
         }
 
 
@@ -99,7 +104,7 @@ namespace qest.Visualizers
             if (!step.Command.Result)
             {
                 var commandNode = testCaseNode.AddNode("Command");
-                AddExceptionNode(commandNode, step.Command.ResultException);
+                commandNode.AddExceptionNode(step.Command.ResultException);
                 Pass = false;
                 return;
             }
@@ -119,8 +124,8 @@ namespace qest.Visualizers
 
                         if (expectedResult.ResultException is not null)
                         {
-                            AddExceptionNode(currentResultNode, expectedResult.ResultException);
-                            AddErrorNode(resultSetsNode, currentResultNode);
+                            currentResultNode.AddExceptionNode(expectedResult.ResultException);
+                            resultSetsNode.AddNode(currentResultNode);
                             Pass = false;
                             continue;
                         }
@@ -128,7 +133,7 @@ namespace qest.Visualizers
                         if (currentResult == null)
                         {
                             currentResultNode.AddNode($"Not found".EscapeAndAddStyles(errorStyle));
-                            AddErrorNode(resultSetsNode, currentResultNode);
+                            resultSetsNode.AddNode(currentResultNode);
                             Pass = false;
                             continue;
                         }
@@ -138,14 +143,14 @@ namespace qest.Visualizers
                             if (expectedResult.RowNumber != currentResult.Rows.Count)
                             {
                                 currentResultNode.AddNode($"Rows: {currentResult.Rows.Count} != {expectedResult.RowNumber}".EscapeAndAddStyles(errorStyle));
-                                AddErrorNode(resultSetsNode, currentResultNode);
+                                resultSetsNode.AddNode(currentResultNode);
                                 Pass = false;
                                 continue;
                             }
                         }
 
-                        AddNode(currentResultNode, NewMarkupTreeNode("OK".EscapeAndAddStyles(okStyle)));
-                        AddNode(resultSetsNode, currentResultNode);
+                        currentResultNode.AddOutputNode(NewMarkupTreeNode("OK".EscapeAndAddStyles(okStyle)), Verbose);
+                        resultSetsNode.AddOutputNode(currentResultNode, Verbose);
                     }
 
                     if (resultSetsNode.Nodes.Count > 0)
@@ -164,6 +169,7 @@ namespace qest.Visualizers
                         if (currentResult is null)
                         {
                             currentResultNode.AddNode("Null output".EscapeAndAddStyles(errorStyle));
+                            testCaseNode.AddNode(outputParametersNode.AddNode(currentResultNode));
                             Pass = false;
                             continue;
                         }
@@ -174,26 +180,31 @@ namespace qest.Visualizers
                             if (!Convert.ChangeType(expectedResult.Value, parameterType).Equals(Convert.ChangeType(currentResult, parameterType)))
                             {
                                 currentResultNode.AddNode($"{currentResult} != {expectedResult.Value}".EscapeAndAddStyles(errorStyle));
+                                testCaseNode.AddNode(outputParametersNode.AddNode(currentResultNode));
                                 Pass = false;
                                 continue;
                             }
                         }
 
-                        AddNode(currentResultNode, NewMarkupTreeNode($"{expectedResult.Value} == {currentResult}".EscapeAndAddStyles(okStyle)));
-                        AddNode(outputParametersNode, currentResultNode);
+                        currentResultNode.AddOutputNode(NewMarkupTreeNode($"{expectedResult.Value} == {currentResult}".EscapeAndAddStyles(okStyle)), Verbose);
+                        outputParametersNode.AddOutputNode(currentResultNode, Verbose);
                     }
+
+                    if (outputParametersNode.Nodes.Count > 0)
+                        testCaseNode.AddNode(outputParametersNode);
                 }
 
                 //returncode
                 if (step.Results.ReturnCode.HasValue)
                 {
-                    var rcNode = testCaseNode.AddNode("Return Code".EscapeAndAddStyles(objectStyle_l3));
+                    var rcNode = NewMarkupTreeNode("Return Code".EscapeAndAddStyles(objectStyle_l3));
                     var expectedResult = step.Results.ReturnCode.Value;
                     var currentResult = step.Results.ReturnCodeResult;
 
                     if (step.Results.ReturnCodeResultException is not null)
                     {
-                        AddExceptionNode(rcNode, step.Results.ReturnCodeResultException);
+                        rcNode.AddExceptionNode(step.Results.ReturnCodeResultException);
+                        testCaseNode.AddNode(rcNode);
                         Pass = false;
                     }
                     else
@@ -202,6 +213,7 @@ namespace qest.Visualizers
                         if (!currentResult.HasValue)
                         {
                             rcNode.AddNode("Null output".EscapeAndAddStyles(errorStyle));
+                            testCaseNode.AddNode(rcNode);
                             Pass = false;
                         }
                         else
@@ -209,10 +221,14 @@ namespace qest.Visualizers
                             if (expectedResult != Convert.ToInt32(currentResult.Value))
                             {
                                 rcNode.AddNode($"{currentResult.Value} != {expectedResult}".EscapeAndAddStyles(errorStyle));
+                                testCaseNode.AddNode(rcNode);
                                 Pass = false;
                             }
                             else
+                            {
                                 rcNode.AddNode($"{expectedResult} == {currentResult.Value}".EscapeAndAddStyles(okStyle));
+                                testCaseNode.AddOutputNode(rcNode, Verbose);
+                            }
                         }
                     }
                 }
@@ -221,17 +237,18 @@ namespace qest.Visualizers
             // asserts
             if (step.Asserts != null)
             {
-                var assertsNode = testCaseNode.AddNode("Asserts");
+                var assertsNode = NewMarkupTreeNode("Asserts");
                 foreach (var assert in step.Asserts)
                 {
                     var assertSqlQuery = assert.SqlQuery.ReplaceVars(Test.Variables);
                     var assertScalarValue = assert.ScalarValue.ReplaceVarsInParameter(Test.Variables);
                     var currentResult = assert.Result;
-                    var currentResultNode = assertsNode.AddNode(assertSqlQuery.EscapeAndAddStyles(objectStyle_l3));
+                    var currentResultNode = NewMarkupTreeNode(assertSqlQuery.EscapeAndAddStyles(objectStyle_l3));
 
                     if (assert.ResultException is not null)
                     {
-                        AddExceptionNode(currentResultNode, assert.ResultException);
+                        currentResultNode.AddExceptionNode(assert.ResultException);
+                        assertsNode.AddNode(currentResultNode);
                         Pass = false;
                         continue;
                     }
@@ -239,6 +256,7 @@ namespace qest.Visualizers
                     if (currentResult is null)
                     {
                         currentResultNode.AddNode($"NULL != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
+                        assertsNode.AddNode(currentResultNode);
                         Pass = false;
                     }
                     else
@@ -248,14 +266,21 @@ namespace qest.Visualizers
                         convertOk = Convert.ChangeType(assertScalarValue, scalarType).Equals(Convert.ChangeType(currentResult, scalarType));
 
                         if (convertOk)
+                        {
                             currentResultNode.AddNode($"{currentResult} == {assertScalarValue}".EscapeAndAddStyles(okStyle));
+                            assertsNode.AddOutputNode(currentResultNode, Verbose);
+                        }
                         else
                         {
                             currentResultNode.AddNode($"{currentResult} != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
+                            assertsNode.AddNode(currentResultNode);
                             Pass = false;
                         }
                     }
                 }
+
+                if (assertsNode.Nodes.Count > 0)
+                    testCaseNode.AddNode(assertsNode);
             }
         }
 
@@ -267,30 +292,35 @@ namespace qest.Visualizers
             if (scripts.Result)
             {
                 scriptsNode.AddNode("OK".EscapeAndAddStyles(okStyle));
-                AddNode(root, scriptsNode);
+                root.AddOutputNode(scriptsNode, Verbose);
             }
             else
             {
-                scriptsNode.AddNode(scripts.ResultException!.ToString().EscapeAndAddStyles(errorStyle));
-                AddErrorNode(root, scriptsNode);
+                scriptsNode.AddExceptionNode(scripts.ResultException!);
+                root.AddNode(scriptsNode);
                 Pass = false;
             }
         }
 
-        private void AddExceptionNode(TreeNode currentNode, Exception ex)
+        private TreeNode NewMarkupTreeNode(string markup) => new TreeNode(new Markup(markup));
+    }
+
+    file static class ExtensionMethods
+    {
+        internal static TreeNode AddOutputNode(this TreeNode parentNode, TreeNode childNode, bool verbose)
+        {
+             if (verbose)
+                parentNode.AddNode(childNode);
+            
+            return parentNode;
+        }
+
+        internal static TreeNode AddExceptionNode(this TreeNode currentNode, Exception ex, string errorStyle = "bold red")
         {
             currentNode.AddNode($"Exception".EscapeAndAddStyles(errorStyle));
             currentNode.AddNode(ex.ToString().EscapeAndAddStyles(errorStyle));
+            return currentNode;
         }
-
-        private void AddNode(TreeNode currentNode, TreeNode nodeToAdd, bool forceOutput = false)
-        {
-            if (Verbose || forceOutput)
-                currentNode.AddNode(nodeToAdd);
-        }
-
-        private void AddErrorNode(TreeNode currentNode, TreeNode nodeToAdd) => AddNode(currentNode, nodeToAdd, true);
-
-        private TreeNode NewMarkupTreeNode(string markup) => new TreeNode(new Markup(markup));
     }
+
 }

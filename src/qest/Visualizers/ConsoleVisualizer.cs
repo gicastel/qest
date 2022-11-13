@@ -308,4 +308,15 @@ namespace qest.Visualizers
         private void LogConsoleError(string message) => LogConsole(message, true);
         
     }
+
+    file static class ExtensionMethods
+    {
+        internal static void RemoveLast<T>(this List<T> list)
+        {
+            if (list.Count > 0)
+                list.RemoveAt(list.Count - 1);
+            else
+                throw new System.NotSupportedException();
+        }
+    }
 }

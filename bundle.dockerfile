@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 as build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 as build
 
 LABEL org.opencontainers.image.source=https://github.com/geims83/qest
 
@@ -32,5 +32,5 @@ WORKDIR /
 
 ENTRYPOINT ["sh", "-c", "( /opt/mssql/bin/sqlservr & ) | grep -q \"Service Broker manager has started\" \
     && PATH='$PATH':/app \
-    && sqlpackage /a:Publish /sf:db/${DACPAC}.dacpac /tsn:. /tdn:$DACPAC /tu:sa /tp:$SA_PASSWORD \
+    && sqlpackage /a:Publish /sf:db/${DACPAC}.dacpac /tsn:. /tdn:$DACPAC /tu:sa /tp:$SA_PASSWORD /TargetEncryptConnection:False \
     && qest run --folder tests --tcs \"Server=localhost,1433;Initial Catalog=${DACPAC};User Id=sa;Password=${SA_PASSWORD}\" -o tree"]
