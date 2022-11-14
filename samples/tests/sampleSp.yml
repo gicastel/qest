@@ -60,14 +60,6 @@
         - sqlQuery: SELECT COUNT(*) FROM dbo.SampleTable WHERE [IntValue] = {newValueVar}
           scalarType: Int
           scalarValue: 1
-    - name: Test Error
-      command:
-        commandText: dbo.SampleSp
-        parameters:
-          name: "NoMatchData"
-          newValue: a
-      results:
-        returnCode: 0
     - name: Test KO
       command:
         commandText: dbo.SampleSp
@@ -110,6 +102,14 @@
               - name: TimeValue
                 type: Time
         returnCode: 1
+    - name: Test Error
+      command:
+        commandText: dbo.SampleSp
+        parameters:
+          name: "NoMatchData"
+          newValue: a
+      results:
+        returnCode: 0
   after:
     - type: File
       values:
