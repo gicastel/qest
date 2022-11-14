@@ -366,3 +366,5 @@ FodyWeavers.xsd
 PublishProfiles
 
 launchSettings.json
+
+Taskfile.yml
