@@ -29,9 +29,9 @@ tasks:
   build:all:
     desc: build binaries and docker images
     cmds:
-      - task: build-binaries
-      - task: build-docker-standalone
-      - task: build-docker-bundle
+      - task: build:binaries
+      - task: build:docker-standalone
+      - task: build:docker-bundle
 
   samples:build:
     desc: build sampleDb image
