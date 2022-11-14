@@ -60,6 +60,14 @@
         - sqlQuery: SELECT COUNT(*) FROM dbo.SampleTable WHERE [IntValue] = {newValueVar}
           scalarType: Int
           scalarValue: 1
+    - name: Test Error
+      command:
+        commandText: dbo.SampleSp
+        parameters:
+          name: "NoMatchData"
+          newValue: a
+      results:
+        returnCode: 0
     - name: Test KO
       command:
         commandText: dbo.SampleSp

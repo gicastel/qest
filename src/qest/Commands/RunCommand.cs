@@ -30,10 +30,15 @@ namespace qest.Commands
 
             private List<string> AllowedOutput = new List<string>(){"console", "tree"};
             
-            [Description($"Output format: console / tree")]
+            [Description($"Output format: console | tree")]
             [CommandOption("-o|--output <OUTPUTFORMAT>")]
             [DefaultValue("console")]
             public string OutputFormat { get; init; }
+
+            [Description("Verbose: visualize all output, instead of only errors")]
+            [CommandOption("-v|--verbose")]
+            [DefaultValue(false)]
+            public bool Verbose { get; init; }
 
 
             public override ValidationResult Validate()
@@ -102,7 +107,7 @@ namespace qest.Commands
                 visualizer = new ConsoleVisualizer<MsSqlConnector>(TestCollection, settings.ConnectionString);
 
 
-            int exitCode = await visualizer.RunAllAsync();
+            int exitCode = await visualizer.RunAllAsync(settings.Verbose);
             return exitCode;
         }
     }

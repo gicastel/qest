@@ -1,0 +1,48 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  build:
+    desc: build project
+    cmds:
+      - dotnet build ./src/qest/
+  build:binaries:
+    desc: build binaries
+    deps:
+      - build
+    cmds:
+      - dotnet publish ./src/qest/ --runtime win-x64 -c Release --self-contained true /p:PublishSingleFile=true
+      - dotnet publish ./src/qest/ --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true
+  build:docker-bundle:
+    desc: build docker bundle image for local use
+    deps:
+      - build
+    cmds:
+      - docker build -t qest:bundle-dev -f bundle.dockerfile .
+  build:docker-standalone:
+    desc: build docker standalone image for local use
+    deps:
+      - build
+    cmds:
+      - docker build -t qest:standalone-dev -f standalone.dockerfile .
+  build:all:
+    desc: build binaries and docker images
+    cmds:
+      - task: build-binaries
+      - task: build-docker-standalone
+      - task: build-docker-bundle
+
+  samples:build:
+    desc: build sampleDb image
+    deps:
+      - build:docker-bundle
+    cmds:
+      - docker build -t qest:samples ./samples/
+
+  samples:run:
+    desc: run samples
+    deps:
+      - samples:build
+    cmds:
+      - docker run --rm -t qest:samples

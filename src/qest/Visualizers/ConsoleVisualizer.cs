@@ -12,6 +12,7 @@ namespace qest.Visualizers
 
         private Test Test;
         private bool Pass;
+        private bool Verbose;
 
         private const string objectStyle_l1 = "blue";
         private const string objectStyle_l2 = "cornflowerblue";
@@ -37,8 +38,10 @@ namespace qest.Visualizers
             LogHierarchy = new();
         }
 
-        public async Task<int> RunAllAsync()
+        public async Task<int> RunAllAsync(bool verbose)
         {
+            Verbose = verbose;
+
             int exitCode = 0;
 
             AnsiConsole.MarkupLine($"{TestCollection.Count} tests loaded");
@@ -92,9 +95,9 @@ namespace qest.Visualizers
             }
 
             if (Pass)
-                LogConsole("OK".EscapeAndAddStyles($"bold {okStyle}"));
+                LogConsole("OK".EscapeAndAddStyles($"bold {okStyle}"), true);
             else
-                LogConsole("KO!".EscapeAndAddStyles(errorStyle));
+                LogConsole("KO!".EscapeAndAddStyles(errorStyle), true);
 
             return Pass;
         }
@@ -133,7 +136,7 @@ namespace qest.Visualizers
 
                         if (currentResult == null)
                         {
-                            LogConsole($"Not found".EscapeAndAddStyles(errorStyle));
+                            LogConsoleError($"Not found".EscapeAndAddStyles(errorStyle));
                             Pass = false;
                             LogHierarchy.RemoveLast();
                             continue;
@@ -143,7 +146,7 @@ namespace qest.Visualizers
                         {
                             if (expectedResult.RowNumber != currentResult.Rows.Count)
                             {
-                                LogConsole($"Rows: {currentResult.Rows.Count} != {expectedResult.RowNumber}".EscapeAndAddStyles(errorStyle));
+                                LogConsoleError($"Rows: {currentResult.Rows.Count} != {expectedResult.RowNumber}".EscapeAndAddStyles(errorStyle));
                                 Pass = false;
                                 LogHierarchy.RemoveLast();
                                 continue;
@@ -167,7 +170,7 @@ namespace qest.Visualizers
 
                         if (currentResult is null)
                         {
-                            LogConsole("Null output".EscapeAndAddStyles(errorStyle));
+                            LogConsoleError("Null output".EscapeAndAddStyles(errorStyle));
                             Pass = false;
                             LogHierarchy.RemoveLast();
                             continue;
@@ -178,7 +181,7 @@ namespace qest.Visualizers
                             var parameterType = Utils.MapQestTypeToInternal(expectedResult.Type);
                             if (!Convert.ChangeType(expectedResult.Value, parameterType).Equals(Convert.ChangeType(currentResult, parameterType)))
                             {
-                                LogConsole($"{currentResult} != {expectedResult.Value}".EscapeAndAddStyles(errorStyle));
+                                LogConsoleError($"{currentResult} != {expectedResult.Value}".EscapeAndAddStyles(errorStyle));
                                 Pass = false;
                                 LogHierarchy.RemoveLast();
                                 continue;
@@ -209,14 +212,14 @@ namespace qest.Visualizers
 
                         if (!currentResult.HasValue)
                         {
-                            LogConsole("Null output".EscapeAndAddStyles(errorStyle));
+                            LogConsoleError("Null output".EscapeAndAddStyles(errorStyle));
                             Pass = false;
                         }
                         else
                         {
                             if (expectedResult != Convert.ToInt32(currentResult.Value))
                             {
-                                LogConsole($"{currentResult.Value} != {expectedResult}".EscapeAndAddStyles(errorStyle));
+                                LogConsoleError($"{currentResult.Value} != {expectedResult}".EscapeAndAddStyles(errorStyle));
                                 Pass = false;
                             }
                             else
@@ -248,7 +251,7 @@ namespace qest.Visualizers
 
                     if (currentResult is null)
                     {
-                        LogConsole($"NULL != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
+                        LogConsoleError($"NULL != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
                         Pass = false;
                     }
                     else
@@ -261,7 +264,7 @@ namespace qest.Visualizers
                             LogConsole($"{currentResult} == {assertScalarValue}".EscapeAndAddStyles(okStyle));
                         else
                         {
-                            LogConsole($"{currentResult} != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
+                            LogConsoleError($"{currentResult} != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
                             Pass = false;
                         }
                     }
@@ -293,10 +296,27 @@ namespace qest.Visualizers
             AnsiConsole.WriteException(ex);
         }
 
-        private void LogConsole(string message)
+        private void LogConsole(string message, bool forceOutput = false)
         {
-            string prfx = string.Join(consoleSeparator, LogHierarchy);
-            AnsiConsole.MarkupLine($"{prfx}{consoleSeparator}{message}");
+            if (Verbose || forceOutput)
+            {
+                string prfx = string.Join(consoleSeparator, LogHierarchy);
+                AnsiConsole.MarkupLine($"{prfx}{consoleSeparator}{message}");
+            }
+        }
+
+        private void LogConsoleError(string message) => LogConsole(message, true);
+        
+    }
+
+    file static class ExtensionMethods
+    {
+        internal static void RemoveLast<T>(this List<T> list)
+        {
+            if (list.Count > 0)
+                list.RemoveAt(list.Count - 1);
+            else
+                throw new System.NotSupportedException();
         }
     }
 }
