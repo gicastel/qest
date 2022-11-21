@@ -39,7 +39,6 @@ tasks:
       - build:docker-bundle
     cmds:
       - docker build -t qest:samples ./samples/
-
   samples:run:
     desc: run samples
     deps:
