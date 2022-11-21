@@ -59,13 +59,25 @@ namespace qest.Connectors
             SqlCommand testCmd = new(step.Command.CommandText, Connection);
             testCmd.CommandType = CommandType.StoredProcedure;
 
+            step.Command.ActualParameters = new();
+
             // add input pars
             if (step.Command.Parameters != null)
                 foreach (var input in step.Command.Parameters)
                 {
-                    testCmd.Parameters.AddWithValue($"@{input.Key}", input.Value?.ReplaceVarsInParameter(currentTest.Variables));
-                }
+                    string parName = "@" + input.Key;
+                    var parValue = input.Value?.ReplaceVarsInParameter(currentTest.Variables);
+                    testCmd.Parameters.AddWithValue(parName, parValue);
 
+                    string currentPar = parName + " = ";
+                    if (parValue is null)
+                        currentPar+= "NULL";
+                    else
+                        currentPar+= $"'{parValue}'";
+                        
+                    step.Command.ActualParameters.Add(currentPar);
+                }
+            
             // add output pars
             List<SqlParameter> outPars = new();
             if (step.Results != null)
@@ -73,9 +85,12 @@ namespace qest.Connectors
                 if (step.Results.OutputParameters != null)
                     foreach (var output in step.Results.OutputParameters)
                     {
-                        var outPar = testCmd.Parameters.Add($"@{output.Name}", MapQestTypeToSqlType(output.Type));
+                        string parName = "@" + output.Name;
+                        var outPar = testCmd.Parameters.Add(parName, MapQestTypeToSqlType(output.Type));
                         outPar.Direction = ParameterDirection.Output;
                         outPars.Add(outPar);
+
+                        step.Command.ActualParameters.Add(parName + " OUTPUT");
                     }
 
                 // add rc if exists

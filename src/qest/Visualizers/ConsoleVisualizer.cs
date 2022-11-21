@@ -105,14 +105,19 @@ namespace qest.Visualizers
 
         private void EvaluateTestStep(TestStep step, Dictionary<string, object>? variables)
         {
+
+            LogHierarchy.Add("Command");
+            string actualCommand = $"{step.Command.CommandText} {string.Join(", ", step.Command.ActualParameters)}";
             if (!step.Command.Result)
             {
-                LogHierarchy.Add("Command");
+                LogConsoleError(actualCommand.EscapeAndAddStyles(objectStyle_l3));
                 LogException(step.Command.ResultException);
                 LogHierarchy.RemoveLast();
                 Pass = false;
                 return;
             }
+            LogConsole(actualCommand.EscapeAndAddStyles(objectStyle_l3), Verbose);
+            LogHierarchy.RemoveLast();
 
             if (step.Results != null)
             {
@@ -291,8 +296,9 @@ namespace qest.Visualizers
 
         private void LogException(Exception ex)
         {
+            string exTitle = "Exception".EscapeAndAddStyles(errorStyle);
             string prfx = string.Join(consoleSeparator, LogHierarchy);
-            AnsiConsole.MarkupLine(prfx);
+            AnsiConsole.MarkupLine($"{prfx}{consoleSeparator}{exTitle}");
             AnsiConsole.WriteException(ex);
         }
 
@@ -306,7 +312,7 @@ namespace qest.Visualizers
         }
 
         private void LogConsoleError(string message) => LogConsole(message, true);
-        
+
     }
 
     file static class ExtensionMethods

@@ -101,13 +101,18 @@ namespace qest.Visualizers
 
         private void EvaluateTestStep(TestStep step, Dictionary<string, object>? variables, TreeNode testCaseNode)
         {
+
+            var commandNode = NewMarkupTreeNode("Command");
+            string actualCommand = $"{step.Command.CommandText} {string.Join(", ", step.Command.ActualParameters)}";
+            commandNode.AddNode(actualCommand.EscapeAndAddStyles(objectStyle_l3));
             if (!step.Command.Result)
             {
-                var commandNode = testCaseNode.AddNode("Command");
                 commandNode.AddExceptionNode(step.Command.ResultException);
+                testCaseNode.AddNode(commandNode);
                 Pass = false;
                 return;
             }
+            testCaseNode.AddOutputNode(commandNode, Verbose);
 
             if (step.Results != null)
             {

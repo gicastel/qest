@@ -10,6 +10,8 @@ namespace qest.Models
         public Dictionary<string, object>? Parameters { get; set; }
 
         [YamlIgnore]
+        public List<string> ActualParameters { get; set; }
+        [YamlIgnore]
         public bool Result => ResultException is null;
         [YamlIgnore]
         public Exception ResultException { get; set; }
