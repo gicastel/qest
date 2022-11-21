@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.source=https://github.com/geims83/qest
 COPY ./src ./src
 RUN dotnet publish /src/qest/ -o /output --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true
 
-FROM mcr.microsoft.com/mssql/server:2019-latest AS mssql
+FROM mcr.microsoft.com/mssql/server:2022-latest AS mssql
 USER root
 
 # env vars needed by the mssql image
