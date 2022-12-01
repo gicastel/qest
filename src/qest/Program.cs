@@ -7,7 +7,7 @@ namespace qest
     internal class Program
     {
         const string ExampleCs = "\"Server=WOPR;Initial Catalog=qest;User=StephenFalken;Password=JOSHUA\"";
-        static async Task Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             var app = new CommandApp();
             
@@ -26,7 +26,7 @@ namespace qest
             }
             );
 
-            await app.RunAsync(args);
+            return await app.RunAsync(args);
         }
     }
 }
