@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using YamlDotNet.Serialization;
 
@@ -10,33 +11,34 @@ namespace qest.Models
         public ScriptType Type { get; set; }
         public List<string> Values { get; set; }
 
-        public string Compact(Dictionary<string, object>? variables)
+        public IEnumerable<string> GetValues()
         {
             if (Values == null)
                 throw new ArgumentNullException(nameof(Values));
 
-            switch (this.Type)
+            foreach (var value in Values)
             {
-                case ScriptType.Inline:
-                    return string.Join(";", Values).ReplaceVars(variables);
+                switch (this.Type)
+                {
+                    case ScriptType.Inline:
+                        yield return value;
+                        break;
+                    case ScriptType.File:
 
-                case ScriptType.File:
-                    List<string> list = new List<string>();
-                    foreach (var item in Values)
-                    {
-                        if (File.Exists(item))
+                        if (File.Exists(value))
                         {
-                            using var sr = new StreamReader(item);
+                            using var sr = new StreamReader(value);
                             string data = sr.ReadToEnd();
-                            list.Add(data);
+                            yield return data;
                         }
                         else
-                            throw new FileNotFoundException(null, item);
-                    }
-                    return string.Join(";", list).ReplaceVars(variables);
-                default:
-                    throw new ArgumentException(nameof(Type));
+                            throw new FileNotFoundException(null, value);
+                        break;
+                    default:
+                        throw new ArgumentException(nameof(Type));
+                }
             }
+
         }
     }
 
@@ -48,6 +50,8 @@ namespace qest.Models
 
     public class Scripts : List<Script>
     {
+        [YamlIgnore]
+        public List<string>? ActualScripts { get; set; }
         [YamlIgnore]
         public bool Result => ResultException is null;
         [YamlIgnore]

@@ -216,12 +216,15 @@ namespace qest.Connectors
             var transaction = Connection.BeginTransaction();
             try
             {
+                scripts.ActualScripts = new();
                 foreach (var item in scripts)
                 {
-                    string script = item.Compact(currentTest.Variables);
-                    if (script.Length > 0)
+                    foreach (string innerScript in item.GetValues())
                     {
-                        var cmd = new SqlCommand(script, Connection, transaction);
+                        string actualScript = (string)innerScript.ReplaceVarsInParameter(currentTest.Variables);
+                        scripts.ActualScripts.Add(actualScript);
+                        SqlCommand cmd = new(actualScript, Connection, transaction);
+                        cmd.CommandType = CommandType.Text;
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }

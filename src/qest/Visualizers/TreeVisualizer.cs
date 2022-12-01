@@ -296,11 +296,24 @@ namespace qest.Visualizers
 
             if (scripts.Result)
             {
+                if (Verbose)
+                    for (int i = 0; i < scripts.ActualScripts?.Count; i++)
+                    {
+                        string? item = scripts.ActualScripts[i];
+                        scriptsNode.AddNode(new Markup(item.EscapeAndAddStyles(objectStyle_l3)));
+                    }
+
                 scriptsNode.AddNode("OK".EscapeAndAddStyles(okStyle));
                 root.AddOutputNode(scriptsNode, Verbose);
             }
             else
             {
+                for (int i = 0; i < scripts.ActualScripts?.Count; i++)
+                {
+                    string? item = scripts.ActualScripts[i];
+                    scriptsNode.AddNode(new Markup(item.EscapeAndAddStyles(objectStyle_l3)));
+                }
+
                 scriptsNode.AddExceptionNode(scripts.ResultException!);
                 root.AddNode(scriptsNode);
                 Pass = false;

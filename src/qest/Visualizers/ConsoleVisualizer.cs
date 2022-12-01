@@ -285,9 +285,24 @@ namespace qest.Visualizers
             LogHierarchy.Add(objName);
 
             if (scripts.Result)
+            {
+                if (Verbose)
+                    for (int i = 0; i < scripts.ActualScripts?.Count; i++)
+                    {
+                        string? item = scripts.ActualScripts[i];
+                        LogConsole(item.EscapeAndAddStyles(objectStyle_l3));
+                    }
+
                 LogConsole("OK".EscapeAndAddStyles(okStyle));
+            }
             else
             {
+                for (int i = 0; i < scripts.ActualScripts?.Count; i++)
+                {
+                    string? item = scripts.ActualScripts[i];
+                    LogConsoleError(item.EscapeAndAddStyles(objectStyle_l3));
+                }
+
                 LogException(scripts.ResultException!);
                 Pass = false;
             }
