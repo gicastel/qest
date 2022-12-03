@@ -1,97 +1,164 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema",
-
   "definitions": {
     "Test": {
       "properties": {
-        "name": { "type": "string" },
+        "name": {
+          "type": "string"
+        },
         "variables": {
           "type": "object",
           "additionalProperties": true
         },
-        "before": { "$ref": "#/definitions/Scripts" },
+        "before": {
+          "$ref": "#/definitions/Scripts"
+        },
         "steps": {
           "type": "array",
-          "items": { "$ref": "#/definitions/TestStep" }
+          "items": {
+            "$ref": "#/definitions/TestStep"
+          }
         },
-        "after": { "$ref": "#/definitions/Scripts" }
+        "after": {
+          "$ref": "#/definitions/Scripts"
+        }
       },
-      "required": ["name", "steps"],
+      "required": [
+        "name",
+        "steps"
+      ],
       "additionalProperties": false
     },
     "TestStep": {
       "properties": {
-        "name": { "type": "string" },
-        "command": { "$ref": "#/definitions/TestCommand" },
-        "results": { "$ref": "#/definitions/ResultGroup" },
+        "name": {
+          "type": "string"
+        },
+        "command": {
+          "$ref": "#/definitions/TestCommand"
+        },
+        "results": {
+          "$ref": "#/definitions/ResultGroup"
+        },
         "asserts": {
           "type": "array",
-          "items": { "$ref": "#/definitions/Assert" }
+          "items": {
+            "$ref": "#/definitions/Assert"
+          }
         }
       },
-      "required": ["name", "command", "results"],
+      "required": [
+        "name",
+        "command",
+        "results"
+      ],
       "additionalProperties": false
     },
     "TestCommand": {
       "properties": {
-        "commandText": { "type": "string" },
-        "parameters": { "additionalProperties": true }
+        "commandText": {
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": true
+        }
       },
-      "required": ["commandText"],
+      "required": [
+        "commandText"
+      ],
       "additionalProperties": false
     },
     "ResultGroup": {
       "properties": {
         "resultSets": {
           "type": "array",
-          "items": { "$ref": "#/definitions/ResultSet" }
+          "items": {
+            "$ref": "#/definitions/ResultSet"
+          }
         },
         "outputParameters": {
           "type": "array",
-          "items": { "$ref": "#/definitions/OutputParameter" }
+          "items": {
+            "$ref": "#/definitions/OutputParameter"
+          }
         },
-        "returnCode": { "type": "number" }
+        "returnCode": {
+          "type": "number"
+        }
       },
       "additionalProperties": false
     },
     "ResultSet": {
       "properties": {
-        "name": { "type": "string" },
-        "rowNumber": { "type": "number" },
+        "name": {
+          "type": "string"
+        },
+        "rowNumber": {
+          "type": "number"
+        },
         "columns": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "name": { "type": "string" },
-              "type": { "$ref": "#/definitions/SqlDbType" }
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "$ref": "#/definitions/SqlDbType"
+              }
             },
-            "required": ["name", "type"],
+            "required": [
+              "name",
+              "type"
+            ],
             "additionalProperties": false
           }
+        },
+        "data": {
+          "$ref": "#/definitions/DataScript"
         }
       },
-      "required": ["name", "columns"],
+      "required": [
+        "name",
+        "columns"
+      ],
       "additionalProperties": false
     },
     "OutputParameter": {
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "type": { "$ref": "#/definitions/SqlDbType" },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/SqlDbType"
+        },
         "value": {}
       },
-      "required": ["name", "type", "value"],
+      "required": [
+        "name",
+        "type",
+        "value"
+      ],
       "additionalProperties": false
     },
     "Assert": {
       "type": "object",
       "properties": {
-        "sqlQuery": { "type": "string" },
-        "scalarType": { "$ref": "#/definitions/SqlDbType" },
+        "sqlQuery": {
+          "type": "string"
+        },
+        "scalarType": {
+          "$ref": "#/definitions/SqlDbType"
+        },
         "scalarValue": {}
       },
-      "required": ["sqlQuery", "scalarType", "scalarValue"],
+      "required": [
+        "sqlQuery",
+        "scalarType",
+        "scalarValue"
+      ],
       "additionalProperties": false
     },
     "Scripts": {
@@ -108,14 +175,41 @@
         },
         "values": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
     },
+    "DataScript": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/ScriptType"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "separator": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "values"
+      ],
+      "additionalProperties": false
+    },
     "ScriptType": {
       "type": "string",
-      "enum": ["File", "Inline"]
+      "enum": [
+        "File",
+        "Inline"
+      ]
     },
     "SqlDbType": {
       "type": "string",
@@ -138,7 +232,6 @@
       ]
     }
   },
-
   "type": "array",
   "items": {
     "$ref": "#/definitions/Test"
