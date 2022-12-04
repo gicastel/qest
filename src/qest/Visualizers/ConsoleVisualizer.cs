@@ -158,7 +158,49 @@ namespace qest.Visualizers
                             }
                         }
 
-                        LogConsole("OK".EscapeAndAddStyles(okStyle));
+                        if (expectedResult.Data is not null)
+                        {
+
+                            if (expectedResult.Data.Values.Count > currentResult.Rows.Count)
+                            {
+                                LogConsoleError($"Rows: {currentResult.Rows.Count} < {expectedResult.Data.Values.Count}".EscapeAndAddStyles(errorStyle));
+                                Pass = false;
+                                LogHierarchy.RemoveLast();
+                                continue;
+                            }
+
+                            // check expected values
+
+                            for (int i = 0; i < expectedResult.Data.Values.Count; i++)
+                            {
+                                var expectedRow = expectedResult.Data.Values[i].Split(expectedResult.Data.Separator ?? ";");
+                                var currentRow = currentResult.Rows[i];
+
+                                LogHierarchy.Add($"[{i + 1}]".EscapeMarkup());
+
+                                for (int j = 0; j < expectedRow.Length; j++)
+                                {
+                                    var currentValue = currentRow[j];
+                                    var expectedValue = Convert.ChangeType(expectedRow[j], currentValue.GetType());
+
+                                    if (!expectedValue.Equals(currentValue))
+                                    {
+                                        LogConsoleError($"{expectedResult.Columns[j].Name}: {currentValue} != {expectedValue}".EscapeAndAddStyles(errorStyle));
+                                        Pass = false;
+                                    }
+                                    else
+                                    {
+                                        LogConsole($"{expectedResult.Columns[j].Name}: {currentValue}".EscapeAndAddStyles(okStyle), Verbose);
+                                    }
+                                }
+
+                                LogHierarchy.RemoveLast(); 
+                            }
+                        }
+
+                        if (Pass)
+                            LogConsole("OK".EscapeAndAddStyles(okStyle));
+                        
                         LogHierarchy.RemoveLast();
                     }
                     LogHierarchy.RemoveLast();

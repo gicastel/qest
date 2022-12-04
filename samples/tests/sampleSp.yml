@@ -51,6 +51,11 @@
                 type: Date
               - name: TimeValue
                 type: Time
+            data:
+              type: Inline
+              values:
+                  - "aaa;True;42"
+              separator: ";"
         outputParameters:
           - name: oldValue
             type: Int
@@ -107,7 +112,7 @@
         commandText: dbo.SampleSp
         parameters:
           name: "NoMatchData"
-          newValue: a
+          newValue: NULL
       results:
         returnCode: 0
   after:
