@@ -169,10 +169,12 @@ namespace qest.Visualizers
 
                             bool dataError = false;
                             var dataTable = new Table();
-                            foreach(var column in expectedResult.Columns)
-                            {
-                                dataTable.AddColumn(column.Name);
-                            }
+                            // foreach(var column in expectedResult.Columns)
+                            // {
+                            //     dataTable.AddColumn(column.Name);
+
+                            //     dataTable.Columns
+                            // }
 
                             for (int i = 0; i < expectedResult.Data.Values.Count; i++)
                             {
@@ -184,6 +186,9 @@ namespace qest.Visualizers
 
                                 for (int j = 0; j < expectedRow.Length; j++)
                                 {
+                                    if (i==0)
+                                        dataTable.AddColumn(expectedResult.Columns[j].Name);
+
                                     var currentValue = currentRow[j];
                                     var expectedValue = Convert.ChangeType(expectedRow[j], currentValue.GetType());
 
@@ -196,7 +201,7 @@ namespace qest.Visualizers
                                         outputRow.Add($"{currentValue}".EscapeAndAddStyles(okStyle));
                                 }
 
-                                dataTable.AddRow(outputRow);
+                                dataTable.AddRow(outputRow.ToArray());
                             }
 
                             currentResultNode.AddNode(dataTable);
