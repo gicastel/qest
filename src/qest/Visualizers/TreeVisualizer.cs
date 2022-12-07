@@ -154,6 +154,61 @@ namespace qest.Visualizers
                             }
                         }
 
+                        if (expectedResult.Data is not null)
+                        {
+
+                            if (expectedResult.Data.Values.Count > currentResult.Rows.Count)
+                            {
+                                currentResultNode.AddNode($"Rows: {currentResult.Rows.Count} < {expectedResult.Data.Values.Count}".EscapeAndAddStyles(errorStyle));
+                                resultSetsNode.AddNode(currentResultNode);
+                                Pass = false;
+                                continue;
+                            }
+
+                            // check expected values
+
+                            bool dataError = false;
+                            var dataTable = new Table();
+                            foreach(var column in expectedResult.Columns)
+                            {
+                                dataTable.AddColumn(column.Name);
+                            }
+
+                            for (int i = 0; i < expectedResult.Data.Values.Count; i++)
+                            {
+                                var values = expectedResult.Data.Values[i].ReplaceVars(variables);
+                                var expectedRow = values.Split(expectedResult.Data.Separator ?? ";");
+                                var currentRow = currentResult.Rows[i];
+
+                                List<string> outputRow = new();
+
+                                for (int j = 0; j < expectedRow.Length; j++)
+                                {
+                                    var currentValue = currentRow[j];
+                                    var expectedValue = Convert.ChangeType(expectedRow[j], currentValue.GetType());
+
+                                    if (!expectedValue.Equals(currentValue))
+                                    {
+                                        outputRow.Add($"{currentValue} != {expectedValue}".EscapeAndAddStyles(errorStyle));
+                                        dataError = true;
+                                    }
+                                    else
+                                        outputRow.Add($"{currentValue}".EscapeAndAddStyles(okStyle));
+                                }
+
+                                dataTable.AddRow(outputRow);
+                            }
+
+                            currentResultNode.AddNode(dataTable);
+                            
+                            if (dataError)
+                            {
+                                resultSetsNode.AddNode(currentResultNode);
+                                Pass = false;
+                                continue;
+                            }
+                        }
+
                         currentResultNode.AddOutputNode(NewMarkupTreeNode("OK".EscapeAndAddStyles(okStyle)), Verbose);
                         resultSetsNode.AddOutputNode(currentResultNode, Verbose);
                     }

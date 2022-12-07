@@ -173,10 +173,11 @@ namespace qest.Visualizers
 
                             for (int i = 0; i < expectedResult.Data.Values.Count; i++)
                             {
-                                var expectedRow = expectedResult.Data.Values[i].Split(expectedResult.Data.Separator ?? ";");
+                                var values = expectedResult.Data.Values[i].ReplaceVars(variables);
+                                var expectedRow = values.Split(expectedResult.Data.Separator ?? ";");
                                 var currentRow = currentResult.Rows[i];
 
-                                LogHierarchy.Add($"[{i + 1}]".EscapeMarkup());
+                                LogHierarchy.Add($"{i + 1}".EscapeMarkup());
 
                                 for (int j = 0; j < expectedRow.Length; j++)
                                 {
