@@ -6,12 +6,19 @@ using YamlDotNet.Serialization;
 
 namespace qest.Models
 {
-    public class Script
+    public class TextArray
     {
         public ScriptType Type { get; set; }
         public List<string> Values { get; set; }
-
-        public IEnumerable<string> GetValues()
+        
+        /// <summary>
+        /// Read every item as a whole in the collection
+        /// </summary>
+        /// <returns>A single element of the array</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        public IEnumerable<string> ReadValue()
         {
             if (Values == null)
                 throw new ArgumentNullException(nameof(Values));
@@ -23,6 +30,7 @@ namespace qest.Models
                     case ScriptType.Inline:
                         yield return value;
                         break;
+
                     case ScriptType.File:
 
                         if (File.Exists(value))
@@ -34,6 +42,49 @@ namespace qest.Models
                         else
                             throw new FileNotFoundException(null, value);
                         break;
+
+                    default:
+                        throw new ArgumentException(nameof(Type));
+                }
+            }
+            
+        }
+
+        /// <summary>
+        /// Reads every item in the collection line by line
+        /// </summary>
+        /// <returns>A single line of the collection</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        public IEnumerable<string> ReadLine()
+        {
+            if (Values == null)
+                throw new ArgumentNullException(nameof(Values));
+
+            foreach (var value in Values)
+            {
+                switch (this.Type)
+                {
+                    case ScriptType.Inline:
+                        yield return value;
+                        break;
+
+                    case ScriptType.File:
+
+                        if (File.Exists(value))
+                        {
+                            using var sr = new StreamReader(value);
+                            while (sr.Peek() >= 0)
+                            {
+                                string data = sr.ReadLine();
+                                yield return data;
+                            }
+                        }
+                        else
+                            throw new FileNotFoundException(null, value);
+                        break;
+
                     default:
                         throw new ArgumentException(nameof(Type));
                 }
@@ -48,7 +99,7 @@ namespace qest.Models
         File
     }
 
-    public class Scripts : List<Script>
+    public class Scripts : List<TextArray>
     {
         [YamlIgnore]
         public List<string>? ActualScripts { get; set; }

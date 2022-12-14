@@ -156,30 +156,17 @@ namespace qest.Visualizers
 
                         if (expectedResult.Data is not null)
                         {
-
-                            if (expectedResult.Data.Values.Count > currentResult.Rows.Count)
-                            {
-                                currentResultNode.AddNode($"Rows: {currentResult.Rows.Count} < {expectedResult.Data.Values.Count}".EscapeAndAddStyles(errorStyle));
-                                resultSetsNode.AddNode(currentResultNode);
-                                Pass = false;
-                                continue;
-                            }
-
                             // check expected values
 
                             bool dataError = false;
                             var dataTable = new Table();
-                            // foreach(var column in expectedResult.Columns)
-                            // {
-                            //     dataTable.AddColumn(column.Name);
 
-                            //     dataTable.Columns
-                            // }
+                            int i = 0;
 
-                            for (int i = 0; i < expectedResult.Data.Values.Count; i++)
+                            foreach (var expectedResultLine in expectedResult.Data.ReadLine())
                             {
-                                var values = expectedResult.Data.Values[i].ReplaceVars(variables);
-                                var expectedRow = values.Split(expectedResult.Data.Separator ?? ";");
+                                var expectedRowWithSubstitutions = expectedResultLine.ReplaceVars(variables);
+                                var expectedRow = expectedRowWithSubstitutions.Split(expectedResult.Data.Separator ?? ";");
                                 var currentRow = currentResult.Rows[i];
 
                                 List<string> outputRow = new();
@@ -200,7 +187,8 @@ namespace qest.Visualizers
                                     else
                                         outputRow.Add($"{currentValue}".EscapeAndAddStyles(okStyle));
                                 }
-
+                                
+                                i++;
                                 dataTable.AddRow(outputRow.ToArray());
                             }
 

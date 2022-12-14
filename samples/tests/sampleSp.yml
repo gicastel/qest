@@ -54,12 +54,67 @@
             data:
               type: Inline
               values:
-                  - "aaa;True;42"
+                  - "SampleName;True;42"
               separator: ";"
         outputParameters:
           - name: oldValue
             type: Int
             value: 0
+        returnCode: 0
+      asserts:
+        - sqlQuery: SELECT COUNT(*) FROM dbo.SampleTable WHERE [IntValue] = {newValueVar}
+          scalarType: Int
+          scalarValue: 1
+    - name: Test OK with csv data
+      command:
+        commandText: dbo.SampleSp
+        parameters:
+          name: "{nameVar}"
+          newValue: 2
+      results:
+        resultSets:
+          - name: sampleSpRS1
+            rowNumber: 1
+            columns:
+              - name: Name
+                type: NVarChar
+              - name: BitValue
+                type: Bit
+              - name: TinyIntValue
+                type: TinyInt
+              - name: SmallintValue
+                type: SmallInt
+              - name: IntValue
+                type: Int
+              - name: BigIntValue
+                type: BigInt
+              - name: FloatValue
+                type: Float
+              - name: RealtValue
+                type: Real
+              - name: DecimalValue
+                type: Decimal
+              - name: MoneyValue
+                type: Money
+              - name: DateTimeValue
+                type: DateTime
+              - name: DateTime2Value
+                type: DateTime2
+              - name: DateTimeOffsetValue
+                type: DateTimeOffset
+              - name: DateValue
+                type: Date
+              - name: TimeValue
+                type: Time
+            data:
+              type: File
+              values:
+                  - scripts/results.csv
+              separator: ";"
+        outputParameters:
+          - name: oldValue
+            type: Int
+            value: 1
         returnCode: 0
       asserts:
         - sqlQuery: SELECT COUNT(*) FROM dbo.SampleTable WHERE [IntValue] = {newValueVar}

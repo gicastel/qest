@@ -56,11 +56,9 @@ namespace qest.Models
         public qestType Type { get; set; }
     }
 
-    public class ResultSetData
+    public class ResultSetData : TextArray
     {
-        public ScriptType Type { get; set; }
         public string? Separator { get; set; }
-        public List<string> Values { get; set; }
     }
 
 }

@@ -161,20 +161,13 @@ namespace qest.Visualizers
                         if (expectedResult.Data is not null)
                         {
 
-                            if (expectedResult.Data.Values.Count > currentResult.Rows.Count)
-                            {
-                                LogConsoleError($"Rows: {currentResult.Rows.Count} < {expectedResult.Data.Values.Count}".EscapeAndAddStyles(errorStyle));
-                                Pass = false;
-                                LogHierarchy.RemoveLast();
-                                continue;
-                            }
-
                             // check expected values
+                            int i = 0;
 
-                            for (int i = 0; i < expectedResult.Data.Values.Count; i++)
+                            foreach (var expectedResultLine in expectedResult.Data.ReadLine())
                             {
-                                var values = expectedResult.Data.Values[i].ReplaceVars(variables);
-                                var expectedRow = values.Split(expectedResult.Data.Separator ?? ";");
+                                var expectedRowWithSubstitutions = expectedResultLine.ReplaceVars(variables);
+                                var expectedRow = expectedRowWithSubstitutions.Split(expectedResult.Data.Separator ?? ";");
                                 var currentRow = currentResult.Rows[i];
 
                                 LogHierarchy.Add($"{i + 1}".EscapeMarkup());
@@ -195,6 +188,8 @@ namespace qest.Visualizers
                                     }
                                 }
 
+                                i++;
+                                    
                                 LogHierarchy.RemoveLast(); 
                             }
                         }
