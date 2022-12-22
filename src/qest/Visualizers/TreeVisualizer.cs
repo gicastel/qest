@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Threading.Tasks;
 using qest.Models;
 using Spectre.Console;
@@ -177,7 +179,8 @@ namespace qest.Visualizers
                                         dataTable.AddColumn(expectedResult.Columns[j].Name);
 
                                     var currentValue = currentRow[j];
-                                    var expectedValue = Convert.ChangeType(expectedRow[j], currentValue.GetType());
+                                    var converter = TypeDescriptor.GetConverter(currentValue.GetType());
+                                    var expectedValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, expectedRow[j]);
 
                                     if (!expectedValue.Equals(currentValue))
                                     {
@@ -295,7 +298,7 @@ namespace qest.Visualizers
                 {
                     var assertSqlQuery = assert.SqlQuery.ReplaceVars(Test.Variables);
                     var assertScalarValue = assert.ScalarValue.ReplaceVarsInParameter(Test.Variables);
-                    var currentResult = assert.Result;
+                    var actualResult = assert.Result;
                     var currentResultNode = NewMarkupTreeNode(assertSqlQuery.EscapeAndAddStyles(objectStyle_l3));
 
                     if (assert.ResultException is not null)
@@ -306,7 +309,7 @@ namespace qest.Visualizers
                         continue;
                     }
 
-                    if (currentResult is null)
+                    if (actualResult is null)
                     {
                         currentResultNode.AddNode($"NULL != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
                         assertsNode.AddNode(currentResultNode);
@@ -316,16 +319,16 @@ namespace qest.Visualizers
                     {
                         bool convertOk = false;
                         var scalarType = Utils.MapQestTypeToInternal(assert.ScalarType);
-                        convertOk = Convert.ChangeType(assertScalarValue, scalarType).Equals(Convert.ChangeType(currentResult, scalarType));
+                        convertOk = Convert.ChangeType(assertScalarValue, scalarType).Equals(Convert.ChangeType(actualResult, scalarType));
 
                         if (convertOk)
                         {
-                            currentResultNode.AddNode($"{currentResult} == {assertScalarValue}".EscapeAndAddStyles(okStyle));
+                            currentResultNode.AddNode($"{actualResult} == {assertScalarValue}".EscapeAndAddStyles(okStyle));
                             assertsNode.AddOutputNode(currentResultNode, Verbose);
                         }
                         else
                         {
-                            currentResultNode.AddNode($"{currentResult} != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
+                            currentResultNode.AddNode($"{actualResult} != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
                             assertsNode.AddNode(currentResultNode);
                             Pass = false;
                         }

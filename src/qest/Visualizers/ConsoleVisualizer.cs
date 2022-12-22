@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Threading.Tasks;
 using qest.Models;
 using Spectre.Console;
@@ -175,7 +177,8 @@ namespace qest.Visualizers
                                 for (int j = 0; j < expectedRow.Length; j++)
                                 {
                                     var currentValue = currentRow[j];
-                                    var expectedValue = Convert.ChangeType(expectedRow[j], currentValue.GetType());
+                                    var converter = TypeDescriptor.GetConverter(currentValue.GetType());
+                                    var expectedValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, expectedRow[j]);
 
                                     if (!expectedValue.Equals(currentValue))
                                     {

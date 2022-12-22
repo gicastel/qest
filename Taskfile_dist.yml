@@ -6,7 +6,7 @@ tasks:
   build:
     desc: build project
     cmds:
-      - dotnet build ./src/qest/
+      - dotnet build -c Release ./src/qest/
   build:binaries:
     desc: build binaries
     deps:
