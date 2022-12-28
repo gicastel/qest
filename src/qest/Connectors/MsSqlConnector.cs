@@ -219,7 +219,7 @@ namespace qest.Connectors
                 scripts.ActualScripts = new();
                 foreach (var item in scripts)
                 {
-                    foreach (string innerScript in item.GetValues())
+                    foreach (string innerScript in item.ReadValue())
                     {
                         string actualScript = (string)innerScript.ReplaceVarsInParameter(currentTest.Variables);
                         scripts.ActualScripts.Add(actualScript);

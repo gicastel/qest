@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Threading.Tasks;
 using qest.Models;
 using Spectre.Console;
@@ -154,6 +156,77 @@ namespace qest.Visualizers
                             }
                         }
 
+                        if (expectedResult.Data is not null)
+                        {
+                            // check expected values
+
+                            bool dataError = false;
+                            var dataTable = new Table();
+
+                            int i = 0;
+
+                            foreach (var expectedResultLine in expectedResult.Data.ReadLine())
+                            {
+                                var expectedRowWithSubstitutions = expectedResultLine.ReplaceVars(variables);
+                                var expectedRow = expectedRowWithSubstitutions.Split(expectedResult.Data.Separator);
+                                var currentRow = currentResult.Rows[i];
+
+                                List<string> outputRow = new();
+
+                                for (int j = 0; j < expectedRow.Length; j++)
+                                {
+                                    if (i==0)
+                                        dataTable.AddColumn(expectedResult.Columns[j].Name);
+
+                                    string expectedValueString = expectedRow[j];
+
+                                    if (expectedValueString == expectedResult.Data.SkipField)
+                                    {
+                                        outputRow.Add(expectedResult.Data.SkipField);
+                                        continue;
+                                    }
+
+                                    var currentValue = currentRow[j];
+
+                                    if (string.IsNullOrWhiteSpace(expectedValueString))
+                                    {
+                                        if (currentValue == DBNull.Value)
+                                        {
+                                            outputRow.Add($"NULL".EscapeAndAddStyles(okStyle));
+                                        }
+                                        else
+                                        {
+                                            outputRow.Add($"NULL != {expectedValueString}".EscapeAndAddStyles(errorStyle));
+                                            dataError = true;
+                                        }
+                                        continue;
+                                    }
+
+                                    var converter = TypeDescriptor.GetConverter(currentValue.GetType());
+                                    var expectedValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, expectedValueString);
+                                    if (!expectedValue.Equals(currentValue))
+                                    {
+                                        outputRow.Add($"{currentValue} != {expectedValue}".EscapeAndAddStyles(errorStyle));
+                                        dataError = true;
+                                    }
+                                    else
+                                        outputRow.Add($"{currentValue}".EscapeAndAddStyles(okStyle));
+                                }
+                                
+                                i++;
+                                dataTable.AddRow(outputRow.ToArray());
+                            }
+
+                            currentResultNode.AddNode(dataTable);
+                            
+                            if (dataError)
+                            {
+                                resultSetsNode.AddNode(currentResultNode);
+                                Pass = false;
+                                continue;
+                            }
+                        }
+
                         currentResultNode.AddOutputNode(NewMarkupTreeNode("OK".EscapeAndAddStyles(okStyle)), Verbose);
                         resultSetsNode.AddOutputNode(currentResultNode, Verbose);
                     }
@@ -247,7 +320,7 @@ namespace qest.Visualizers
                 {
                     var assertSqlQuery = assert.SqlQuery.ReplaceVars(Test.Variables);
                     var assertScalarValue = assert.ScalarValue.ReplaceVarsInParameter(Test.Variables);
-                    var currentResult = assert.Result;
+                    var actualResult = assert.Result;
                     var currentResultNode = NewMarkupTreeNode(assertSqlQuery.EscapeAndAddStyles(objectStyle_l3));
 
                     if (assert.ResultException is not null)
@@ -258,7 +331,7 @@ namespace qest.Visualizers
                         continue;
                     }
 
-                    if (currentResult is null)
+                    if (actualResult is null)
                     {
                         currentResultNode.AddNode($"NULL != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
                         assertsNode.AddNode(currentResultNode);
@@ -268,16 +341,16 @@ namespace qest.Visualizers
                     {
                         bool convertOk = false;
                         var scalarType = Utils.MapQestTypeToInternal(assert.ScalarType);
-                        convertOk = Convert.ChangeType(assertScalarValue, scalarType).Equals(Convert.ChangeType(currentResult, scalarType));
+                        convertOk = Convert.ChangeType(assertScalarValue, scalarType).Equals(Convert.ChangeType(actualResult, scalarType));
 
                         if (convertOk)
                         {
-                            currentResultNode.AddNode($"{currentResult} == {assertScalarValue}".EscapeAndAddStyles(okStyle));
+                            currentResultNode.AddNode($"{actualResult} == {assertScalarValue}".EscapeAndAddStyles(okStyle));
                             assertsNode.AddOutputNode(currentResultNode, Verbose);
                         }
                         else
                         {
-                            currentResultNode.AddNode($"{currentResult} != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
+                            currentResultNode.AddNode($"{actualResult} != {assertScalarValue}".EscapeAndAddStyles(errorStyle));
                             assertsNode.AddNode(currentResultNode);
                             Pass = false;
                         }

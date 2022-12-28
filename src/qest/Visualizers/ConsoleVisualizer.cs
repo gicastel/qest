@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Threading.Tasks;
 using qest.Models;
 using Spectre.Console;
@@ -158,7 +160,68 @@ namespace qest.Visualizers
                             }
                         }
 
-                        LogConsole("OK".EscapeAndAddStyles(okStyle));
+                        if (expectedResult.Data is not null)
+                        {
+
+                            // check expected values
+                            int i = 0;
+
+                            foreach (var expectedResultLine in expectedResult.Data.ReadLine())
+                            {
+                                var expectedRowWithSubstitutions = expectedResultLine.ReplaceVars(variables);
+                                var expectedRow = expectedRowWithSubstitutions.Split(expectedResult.Data.Separator);
+                                var currentRow = currentResult.Rows[i];
+
+                                LogHierarchy.Add($"{i + 1}".EscapeMarkup());
+
+                                for (int j = 0; j < expectedRow.Length; j++)
+                                {
+                                    string expectedValueString = expectedRow[j];
+
+                                    if (expectedValueString == expectedResult.Data.SkipField)
+                                    {
+                                        LogConsole($"{expectedResult.Columns[j].Name}: {expectedResult.Data.SkipField}", Verbose);
+                                        continue;
+                                    }
+
+                                    var currentValue = currentRow[j];
+                                    if (string.IsNullOrWhiteSpace(expectedValueString))
+                                    {
+                                        if (currentValue == DBNull.Value)
+                                        {
+                                            LogConsole($"{expectedResult.Columns[j].Name}: NULL".EscapeAndAddStyles(okStyle), Verbose);
+                                        }
+                                        else
+                                        {
+                                            LogConsoleError($"{expectedResult.Columns[j].Name}: NULL != {expectedValueString}".EscapeAndAddStyles(errorStyle));
+                                            Pass = false;
+                                        }
+                                        continue;
+                                    }
+
+                                    var converter = TypeDescriptor.GetConverter(currentValue.GetType());
+                                    var expectedValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, expectedValueString);
+
+                                    if (!expectedValue.Equals(currentValue))
+                                    {
+                                        LogConsoleError($"{expectedResult.Columns[j].Name}: {currentValue} != {expectedValue}".EscapeAndAddStyles(errorStyle));
+                                        Pass = false;
+                                    }
+                                    else
+                                    {
+                                        LogConsole($"{expectedResult.Columns[j].Name}: {currentValue}".EscapeAndAddStyles(okStyle), Verbose);
+                                    }
+                                }
+
+                                i++;
+                                    
+                                LogHierarchy.RemoveLast(); 
+                            }
+                        }
+
+                        if (Pass)
+                            LogConsole("OK".EscapeAndAddStyles(okStyle));
+                        
                         LogHierarchy.RemoveLast();
                     }
                     LogHierarchy.RemoveLast();

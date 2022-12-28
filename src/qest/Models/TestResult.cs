@@ -23,6 +23,7 @@ namespace qest.Models
         public string Name { get; set; }
         public List<Column> Columns { get; set; }
         public int? RowNumber { get; set; }
+        public ResultSetData? Data { get; set; }
 
         [YamlIgnore]
         public DataTable? Result { get; set; }
@@ -53,6 +54,12 @@ namespace qest.Models
     {
         public string Name { get; set;}
         public qestType Type { get; set; }
+    }
+
+    public class ResultSetData : TextArray
+    {
+        public string Separator { get; set; } = ";";
+        public string SkipField { get; set; } = "*";
     }
 
 }
