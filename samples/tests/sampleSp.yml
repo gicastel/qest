@@ -51,11 +51,12 @@
                 type: Date
               - name: TimeValue
                 type: Time
+              - name: NullValue
+                type: Int
             data:
               type: Inline
               values:
-                  - "SampleName;True;42"
-              separator: ";"
+                  - "SampleName;True;42;*"
         outputParameters:
           - name: oldValue
             type: Int
@@ -106,11 +107,14 @@
                 type: Date
               - name: TimeValue
                 type: Time
+              - name: NullValue
+                type: Int
             data:
               type: File
               values:
                   - scripts/results.csv
               separator: ";"
+              skipField: "*"
         outputParameters:
           - name: oldValue
             type: Int

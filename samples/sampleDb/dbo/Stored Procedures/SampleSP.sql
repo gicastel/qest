@@ -43,7 +43,8 @@ BEGIN
         [DateTime2Value],
         [DateTimeOffsetValue],
         [DateValue],
-        [Time]
+        [Time],
+        NULL AS [NullValue]
     FROM dbo.SampleTable
     WHERE [Name] = @name
 
