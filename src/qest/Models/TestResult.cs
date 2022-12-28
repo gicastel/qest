@@ -58,7 +58,8 @@ namespace qest.Models
 
     public class ResultSetData : TextArray
     {
-        public string? Separator { get; set; }
+        public string Separator { get; set; } = ";";
+        public string SkipField { get; set; } = "*";
     }
 
 }

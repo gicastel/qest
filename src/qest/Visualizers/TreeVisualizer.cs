@@ -168,7 +168,7 @@ namespace qest.Visualizers
                             foreach (var expectedResultLine in expectedResult.Data.ReadLine())
                             {
                                 var expectedRowWithSubstitutions = expectedResultLine.ReplaceVars(variables);
-                                var expectedRow = expectedRowWithSubstitutions.Split(expectedResult.Data.Separator ?? ";");
+                                var expectedRow = expectedRowWithSubstitutions.Split(expectedResult.Data.Separator);
                                 var currentRow = currentResult.Rows[i];
 
                                 List<string> outputRow = new();
@@ -178,10 +178,32 @@ namespace qest.Visualizers
                                     if (i==0)
                                         dataTable.AddColumn(expectedResult.Columns[j].Name);
 
-                                    var currentValue = currentRow[j];
-                                    var converter = TypeDescriptor.GetConverter(currentValue.GetType());
-                                    var expectedValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, expectedRow[j]);
+                                    string expectedValueString = expectedRow[j];
 
+                                    if (expectedValueString == expectedResult.Data.SkipField)
+                                    {
+                                        outputRow.Add(expectedResult.Data.SkipField);
+                                        continue;
+                                    }
+
+                                    var currentValue = currentRow[j];
+
+                                    if (string.IsNullOrWhiteSpace(expectedValueString))
+                                    {
+                                        if (currentValue == DBNull.Value)
+                                        {
+                                            outputRow.Add($"NULL".EscapeAndAddStyles(okStyle));
+                                        }
+                                        else
+                                        {
+                                            outputRow.Add($"NULL != {expectedValueString}".EscapeAndAddStyles(errorStyle));
+                                            dataError = true;
+                                        }
+                                        continue;
+                                    }
+
+                                    var converter = TypeDescriptor.GetConverter(currentValue.GetType());
+                                    var expectedValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, expectedValueString);
                                     if (!expectedValue.Equals(currentValue))
                                     {
                                         outputRow.Add($"{currentValue} != {expectedValue}".EscapeAndAddStyles(errorStyle));
