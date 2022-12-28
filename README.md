@@ -2,7 +2,7 @@
 A simple, cross platform, command line tool to test MSSQL procedures without the needs of a SSDT project or custom procedures / assemblies.
 
 Define your own YAML file with before / after scripts (inline or external text files), input parameters and you can verify:
-- Result sets column names, column order, column types and row number
+- Result sets column names, column types, row number and valiues
 - Output parameters type and value
 - Return code value
 - Custom asserts in the form of a SQL query returning a scalar value
@@ -42,7 +42,7 @@ docker run --rm -t \
 ```
 
 ### Bundle container
-This container contains ( ;-) ) Microsoft SQL Server 2019 *and* qest executables, so you can deploy the database and run tests in a pristine environment.
+This container contains ( ;-) ) Microsoft SQL Server 2022 *and* qest executables, so you can deploy the database and run tests in a pristine environment.
 You need to provide:
 - the `dacpac` file of your database: the folder containing it wil be mounted on the `/db` container folder
 - the YAML files: the folder containing them wil be mounted on the `/tests` container folder
