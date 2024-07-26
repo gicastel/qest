@@ -1,6 +1,6 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 as build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
-LABEL org.opencontainers.image.source=https://github.com/geims83/qest
+LABEL org.opencontainers.image.source=https://github.com/gicastel/qest
 
 COPY ./src ./src
 RUN dotnet publish /src/qest/ -o /output --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true
@@ -9,8 +9,8 @@ FROM mcr.microsoft.com/mssql/server:2022-latest AS mssql
 USER root
 
 # env vars needed by the mssql image
-ENV ACCEPT_EULA Y
-ENV SA_PASSWORD qestDbSecurePassword27!
+ENV ACCEPT_EULA=Y
+ENV SA_PASSWORD=qestDbSecurePassword27!
 
 WORKDIR /app
 COPY --from=build /output/ .
@@ -33,4 +33,4 @@ WORKDIR /
 ENTRYPOINT ["sh", "-c", "( /opt/mssql/bin/sqlservr & ) | grep -q \"Service Broker manager has started\" \
     && PATH='$PATH':/app \
     && sqlpackage /a:Publish /sf:db/${DACPAC}.dacpac /tsn:. /tdn:$DACPAC /tu:sa /tp:$SA_PASSWORD /TargetEncryptConnection:False \
-    && qest run --folder tests --tcs \"Server=localhost,1433;Initial Catalog=${DACPAC};User Id=sa;Password=${SA_PASSWORD}\" -v"]
+    && qest run --folder tests --tcs \"Server=localhost,1433;Initial Catalog=${DACPAC};User Id=sa;Password=${SA_PASSWORD}\" --verbose"]
