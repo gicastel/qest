@@ -36,7 +36,7 @@ namespace qest.Commands
             public string OutputFormat { get; init; }
 
             [Description("Verbose: visualize all output, instead of only errors")]
-            [CommandOption("-v|--verbose")]
+            [CommandOption("-e|--verbose")]
             [DefaultValue(false)]
             public bool Verbose { get; init; }
 
