@@ -44,4 +44,4 @@ tasks:
     deps:
       - samples:build
     cmds:
-      - docker run -t qest:samples
+      - docker run --rm -t qest:samples
