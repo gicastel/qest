@@ -34,5 +34,20 @@ jobs:
           file: standalone.dockerfile
           pull: true
           push: false
-          tags: tandalone, standalone-latest, standalone-${{ github.ref_name }}
+          tags: standalone, standalone-latest, standalone-${{ github.ref_name }}
           
+  build-docker-bundle:
+    runs-on: ubuntu-latest    
+    steps:
+      - uses: actions/checkout@v4
+        name: Check out code
+      
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: bundle.dockerfile
+          pull: true
+          push: false
+          tags: bundle, bundle-latest, bundle-${{ github.ref_name }}
+            
