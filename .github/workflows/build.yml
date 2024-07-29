@@ -26,28 +26,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Check out code
-      
-      - name: Build and push
-        uses: docker/build-push-action@v6
+
+      - uses: mr-smithers-excellent/docker-build-push@v6
+        name: Build Docker standalone image
         with:
-          context: .
-          file: standalone.dockerfile
-          pull: true
-          push: false
+          image: qest
           tags: standalone, standalone-latest, standalone-${{ github.ref_name }}
-          
+          registry: ghcr.io
+          dockerfile: standalone.dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          pushImage: false
+  
   build-docker-bundle:
     runs-on: ubuntu-latest    
     steps:
       - uses: actions/checkout@v4
         name: Check out code
-      
-      - name: Build and push
-        uses: docker/build-push-action@v6
+
+      - uses: mr-smithers-excellent/docker-build-push@v6
+        name: Build Docker bundle image
         with:
-          context: .
-          file: bundle.dockerfile
-          pull: true
-          push: false
+          image: qest
           tags: bundle, bundle-latest, bundle-${{ github.ref_name }}
-            
+          registry: ghcr.io
+          dockerfile: bundle.dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          pushImage: false
