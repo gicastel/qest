@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.10.0</Version>
+    <Version>0.10.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
