@@ -1,10 +1,9 @@
-
-name: release
+name: build
 
 on:
-  push:
-    tags: 
-      - '*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build-binaries:
@@ -21,18 +20,6 @@ jobs:
         run: |
           dotnet publish ./src/qest/ -o ./pub --runtime linux-x64 -c Release --self-contained true /p:PublishSingleFile=true
           dotnet publish ./src/qest/ -o ./pub --runtime win-x64 -c Release --self-contained true /p:PublishSingleFile=true
-          
-      - name: Create Packages
-        run: |
-          gzip -c ./pub/qest > ./qest-linux-x64.gz
-          gzip -c ./pub/qest.exe > ./qest-win-x64.gz
-          
-      - name: Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "*.gz"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          draft: true
 
   build-docker-standalone:
     runs-on: ubuntu-latest    
@@ -41,27 +28,29 @@ jobs:
         name: Check out code
 
       - uses: mr-smithers-excellent/docker-build-push@v6
-        name: Build & push Docker standalone image
+        name: Build Docker standalone image
         with:
           image: qest
-          tags: standalone, standalone-latest, standalone-${{ github.ref_name }}
+          tags: standalone-dev
           registry: ghcr.io
           dockerfile: standalone.dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+          pushImage: false
   
   build-docker-bundle:
     runs-on: ubuntu-latest    
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Check out code
 
       - uses: mr-smithers-excellent/docker-build-push@v6
-        name: Build & push Docker bundle image
+        name: Build Docker bundle image
         with:
           image: qest
-          tags: bundle, bundle-latest, bundle-${{ github.ref_name }}
+          tags: bundle-dev
           registry: ghcr.io
           dockerfile: bundle.dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+          pushImage: false
